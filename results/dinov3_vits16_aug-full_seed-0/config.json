@@ -1,0 +1,13 @@
+{
+  "model_name": "facebook/dinov3-vits16-pretrain-lvd1689m",
+  "frozen_backbone": true,
+  "seed": 0,
+  "size": 224,
+  "batch_size": 64,
+  "num_epochs": 30,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "use_tta": true,
+  "aug": "full",
+  "test_acc": 0.9618689581095596
+}
