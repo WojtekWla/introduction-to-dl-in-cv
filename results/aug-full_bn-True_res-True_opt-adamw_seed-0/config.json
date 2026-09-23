@@ -1,0 +1,16 @@
+{
+  "seed": 0,
+  "size": 160,
+  "batch_size": 64,
+  "num_epochs": 80,
+  "lr": 0.001,
+  "weight_decay": 0.05,
+  "ema_decay": 0.999,
+  "use_tta": true,
+  "aug": "full",
+  "use_bn": true,
+  "residual": true,
+  "opt": "adamw",
+  "width": 32,
+  "test_acc": 0.8104189044038668
+}
