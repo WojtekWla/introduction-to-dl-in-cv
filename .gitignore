@@ -222,3 +222,13 @@ __marimo__/
 .streamlit/secrets.toml
 /data/
 /.idea/
+
+# Project 2 generated artifacts and local dataset copies
+.DS_Store
+project2/data/
+project2/outputs/
+project2/logs/*
+!project2/logs/.gitkeep
+project2/checkpoints/*
+!project2/checkpoints/.gitkeep
+!project2/checkpoints/*_best.pt
