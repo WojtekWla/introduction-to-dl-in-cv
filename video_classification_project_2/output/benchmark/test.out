@@ -1,0 +1,390 @@
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 29769242: <testjob> in cluster <dcc> Exited
+
+Job <testjob> was submitted from host <gbarlogin1> by user <s263577> in cluster <dcc> at Wed Oct 21 10:31:08 2026
+Job was executed on host(s) <4*n-62-18-13>, in queue <c02516>, as user <s263577> in cluster <dcc> at Wed Oct 21 10:31:09 2026
+</zhome/2b/7/233718> was used as the home directory.
+</zhome/2b/7/233718/idlcv> was used as the working directory.
+Started at Wed Oct 21 10:31:09 2026
+Terminated at Wed Oct 21 10:31:19 2026
+Results reported at Wed Oct 21 10:31:19 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/sh
+### ------------- specify queue name ----------------
+#BSUB -q c02516
+#BSUB -gpu "num=1:mode=exclusive_process"
+### ------------- specify job name ----------------
+#BSUB -J testjob
+### ------------- specify number of cores ----------------
+#BSUB -n 4
+#BSUB -R "span[hosts=1]"
+### ------------- specify CPU memory requirements ----------------
+#BSUB -R "rusage[mem=20GB]"
+### ------------- specify wall-clock time (max allowed is 12:00)---------------- 
+#BSUB -W 00:30
+#BSUB -o /zhome/2b/7/233718/idlcv/output/test.out
+#BSUB -e /zhome/2b/7/233718/idlcv/output/error.err
+source ~/idlcv/.venv/bin/activate
+python ~/idlcv/project_2/benchmark_models.py
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   5.11 sec.
+    Max Memory :                                 -
+    Average Memory :                             -
+    Total Requested Memory :                     81920.00 MB
+    Delta Memory :                               -
+    Max Swap :                                   -
+    Max Processes :                              -
+    Max Threads :                                -
+    Run time :                                   10 sec.
+    Turnaround time :                            11 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file </zhome/2b/7/233718/idlcv/output/error.err> for stderr output of this job.
+
+GPU available
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 29769265: <testjob> in cluster <dcc> Exited
+
+Job <testjob> was submitted from host <gbarlogin1> by user <s263577> in cluster <dcc> at Wed Oct 21 10:33:25 2026
+Job was executed on host(s) <4*n-62-18-13>, in queue <c02516>, as user <s263577> in cluster <dcc> at Wed Oct 21 10:33:27 2026
+</zhome/2b/7/233718> was used as the home directory.
+</zhome/2b/7/233718/idlcv> was used as the working directory.
+Started at Wed Oct 21 10:33:27 2026
+Terminated at Wed Oct 21 10:33:36 2026
+Results reported at Wed Oct 21 10:33:36 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/sh
+### ------------- specify queue name ----------------
+#BSUB -q c02516
+#BSUB -gpu "num=1:mode=exclusive_process"
+### ------------- specify job name ----------------
+#BSUB -J testjob
+### ------------- specify number of cores ----------------
+#BSUB -n 4
+#BSUB -R "span[hosts=1]"
+### ------------- specify CPU memory requirements ----------------
+#BSUB -R "rusage[mem=20GB]"
+### ------------- specify wall-clock time (max allowed is 12:00)---------------- 
+#BSUB -W 00:30
+#BSUB -o /zhome/2b/7/233718/idlcv/output/test.out
+#BSUB -e /zhome/2b/7/233718/idlcv/output/error.err
+source ~/idlcv/.venv/bin/activate
+python ~/idlcv/project_2/benchmark_models.py
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time :                                   5.16 sec.
+    Max Memory :                                 -
+    Average Memory :                             -
+    Total Requested Memory :                     81920.00 MB
+    Delta Memory :                               -
+    Max Swap :                                   -
+    Max Processes :                              -
+    Max Threads :                                -
+    Run time :                                   9 sec.
+    Turnaround time :                            11 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file </zhome/2b/7/233718/idlcv/output/error.err> for stderr output of this job.
+
+GPU available
+Evaluating single_frame
+epoch  1 | train loss 2.194 acc 0.198 | val loss 2.158 video acc 0.267  *best*
+epoch  2 | train loss 1.930 acc 0.368 | val loss 1.977 video acc 0.375  *best*
+epoch  3 | train loss 1.758 acc 0.466 | val loss 1.763 video acc 0.400  *best*
+epoch  4 | train loss 1.582 acc 0.543 | val loss 1.597 video acc 0.483  *best*
+epoch  5 | train loss 1.451 acc 0.597 | val loss 1.376 video acc 0.583  *best*
+epoch  6 | train loss 1.346 acc 0.657 | val loss 1.228 video acc 0.650  *best*
+epoch  7 | train loss 1.262 acc 0.698 | val loss 1.154 video acc 0.642
+epoch  8 | train loss 1.210 acc 0.728 | val loss 1.030 video acc 0.733  *best*
+epoch  9 | train loss 1.150 acc 0.761 | val loss 0.940 video acc 0.792  *best*
+epoch 10 | train loss 1.086 acc 0.789 | val loss 0.857 video acc 0.817  *best*
+epoch 11 | train loss 1.035 acc 0.816 | val loss 0.793 video acc 0.825  *best*
+epoch 12 | train loss 0.995 acc 0.841 | val loss 0.787 video acc 0.833  *best*
+epoch 13 | train loss 0.971 acc 0.850 | val loss 0.730 video acc 0.867  *best*
+epoch 14 | train loss 0.957 acc 0.855 | val loss 0.676 video acc 0.883  *best*
+epoch 15 | train loss 0.925 acc 0.877 | val loss 0.721 video acc 0.867
+epoch 16 | train loss 0.903 acc 0.890 | val loss 0.683 video acc 0.883  *best*
+epoch 17 | train loss 0.888 acc 0.895 | val loss 0.685 video acc 0.875
+epoch 18 | train loss 0.883 acc 0.892 | val loss 0.630 video acc 0.883  *best*
+epoch 19 | train loss 0.868 acc 0.905 | val loss 0.643 video acc 0.892  *best*
+epoch 20 | train loss 0.858 acc 0.914 | val loss 0.611 video acc 0.892  *best*
+epoch 21 | train loss 0.847 acc 0.912 | val loss 0.583 video acc 0.908  *best*
+epoch 22 | train loss 0.845 acc 0.916 | val loss 0.601 video acc 0.892
+epoch 23 | train loss 0.824 acc 0.925 | val loss 0.594 video acc 0.892
+epoch 24 | train loss 0.822 acc 0.925 | val loss 0.570 video acc 0.892
+epoch 25 | train loss 0.820 acc 0.929 | val loss 0.587 video acc 0.892
+epoch 26 | train loss 0.808 acc 0.934 | val loss 0.581 video acc 0.908  *best*
+epoch 27 | train loss 0.808 acc 0.934 | val loss 0.569 video acc 0.908  *best*
+epoch 28 | train loss 0.802 acc 0.935 | val loss 0.560 video acc 0.900
+epoch 29 | train loss 0.802 acc 0.937 | val loss 0.552 video acc 0.900
+epoch 30 | train loss 0.796 acc 0.939 | val loss 0.557 video acc 0.892
+epoch 31 | train loss 0.789 acc 0.943 | val loss 0.548 video acc 0.900
+epoch 32 | train loss 0.790 acc 0.943 | val loss 0.535 video acc 0.917  *best*
+epoch 33 | train loss 0.785 acc 0.943 | val loss 0.553 video acc 0.908
+epoch 34 | train loss 0.775 acc 0.946 | val loss 0.547 video acc 0.908
+epoch 35 | train loss 0.772 acc 0.949 | val loss 0.542 video acc 0.908
+epoch 36 | train loss 0.774 acc 0.948 | val loss 0.530 video acc 0.908
+epoch 37 | train loss 0.773 acc 0.948 | val loss 0.538 video acc 0.908
+epoch 38 | train loss 0.767 acc 0.948 | val loss 0.533 video acc 0.908
+epoch 39 | train loss 0.769 acc 0.950 | val loss 0.530 video acc 0.908
+epoch 40 | train loss 0.766 acc 0.953 | val loss 0.529 video acc 0.908
+epoch 41 | train loss 0.765 acc 0.952 | val loss 0.525 video acc 0.908
+epoch 42 | train loss 0.760 acc 0.955 | val loss 0.524 video acc 0.908
+epoch 43 | train loss 0.764 acc 0.954 | val loss 0.520 video acc 0.908
+epoch 44 | train loss 0.758 acc 0.953 | val loss 0.521 video acc 0.908
+epoch 45 | train loss 0.761 acc 0.953 | val loss 0.520 video acc 0.908
+epoch 46 | train loss 0.756 acc 0.956 | val loss 0.518 video acc 0.908
+epoch 47 | train loss 0.759 acc 0.954 | val loss 0.520 video acc 0.908
+epoch 48 | train loss 0.755 acc 0.956 | val loss 0.518 video acc 0.908
+epoch 49 | train loss 0.761 acc 0.955 | val loss 0.519 video acc 0.908
+epoch 50 | train loss 0.760 acc 0.953 | val loss 0.519 video acc 0.908
+test loss 0.537 | test video acc 0.892
+Evaluating early_fusion
+epoch  1 | train loss 2.350 acc 0.184 | val loss 2.442 video acc 0.158  *best*
+epoch  2 | train loss 2.109 acc 0.290 | val loss 2.153 video acc 0.292  *best*
+epoch  3 | train loss 1.993 acc 0.312 | val loss 2.036 video acc 0.317  *best*
+epoch  4 | train loss 1.859 acc 0.384 | val loss 2.703 video acc 0.208
+epoch  5 | train loss 1.830 acc 0.436 | val loss 1.967 video acc 0.383  *best*
+epoch  6 | train loss 1.799 acc 0.420 | val loss 2.140 video acc 0.292
+epoch  7 | train loss 1.675 acc 0.490 | val loss 1.816 video acc 0.433  *best*
+epoch  8 | train loss 1.673 acc 0.452 | val loss 1.957 video acc 0.375
+epoch  9 | train loss 1.518 acc 0.588 | val loss 1.834 video acc 0.400
+epoch 10 | train loss 1.558 acc 0.528 | val loss 1.666 video acc 0.483  *best*
+epoch 11 | train loss 1.527 acc 0.538 | val loss 1.619 video acc 0.458
+epoch 12 | train loss 1.485 acc 0.558 | val loss 1.660 video acc 0.467
+epoch 13 | train loss 1.421 acc 0.614 | val loss 1.478 video acc 0.558  *best*
+epoch 14 | train loss 1.432 acc 0.590 | val loss 1.520 video acc 0.600  *best*
+epoch 15 | train loss 1.350 acc 0.622 | val loss 1.714 video acc 0.483
+epoch 16 | train loss 1.277 acc 0.696 | val loss 1.463 video acc 0.617  *best*
+epoch 17 | train loss 1.293 acc 0.664 | val loss 1.458 video acc 0.642  *best*
+epoch 18 | train loss 1.238 acc 0.698 | val loss 1.447 video acc 0.617
+epoch 19 | train loss 1.198 acc 0.712 | val loss 1.341 video acc 0.642  *best*
+epoch 20 | train loss 1.186 acc 0.714 | val loss 1.366 video acc 0.650  *best*
+epoch 21 | train loss 1.191 acc 0.740 | val loss 1.341 video acc 0.683  *best*
+epoch 22 | train loss 1.093 acc 0.792 | val loss 1.330 video acc 0.675
+epoch 23 | train loss 1.157 acc 0.760 | val loss 1.298 video acc 0.733  *best*
+epoch 24 | train loss 1.069 acc 0.798 | val loss 1.305 video acc 0.683
+epoch 25 | train loss 1.125 acc 0.764 | val loss 1.431 video acc 0.642
+epoch 26 | train loss 1.025 acc 0.806 | val loss 1.234 video acc 0.725
+epoch 27 | train loss 1.060 acc 0.802 | val loss 1.244 video acc 0.708
+epoch 28 | train loss 1.068 acc 0.792 | val loss 1.287 video acc 0.733  *best*
+epoch 29 | train loss 1.017 acc 0.836 | val loss 1.212 video acc 0.750  *best*
+epoch 30 | train loss 0.999 acc 0.818 | val loss 1.219 video acc 0.733
+epoch 31 | train loss 0.994 acc 0.850 | val loss 1.236 video acc 0.700
+epoch 32 | train loss 0.993 acc 0.858 | val loss 1.188 video acc 0.758  *best*
+epoch 33 | train loss 0.925 acc 0.866 | val loss 1.203 video acc 0.767  *best*
+epoch 34 | train loss 0.966 acc 0.846 | val loss 1.202 video acc 0.717
+epoch 35 | train loss 0.956 acc 0.864 | val loss 1.187 video acc 0.767  *best*
+epoch 36 | train loss 0.963 acc 0.864 | val loss 1.215 video acc 0.733
+epoch 37 | train loss 0.909 acc 0.878 | val loss 1.184 video acc 0.733
+epoch 38 | train loss 0.882 acc 0.898 | val loss 1.175 video acc 0.767  *best*
+epoch 39 | train loss 0.933 acc 0.868 | val loss 1.203 video acc 0.725
+epoch 40 | train loss 0.914 acc 0.872 | val loss 1.171 video acc 0.758
+epoch 41 | train loss 0.902 acc 0.876 | val loss 1.156 video acc 0.767  *best*
+epoch 42 | train loss 0.876 acc 0.898 | val loss 1.131 video acc 0.767  *best*
+epoch 43 | train loss 0.878 acc 0.900 | val loss 1.113 video acc 0.792  *best*
+epoch 44 | train loss 0.888 acc 0.874 | val loss 1.147 video acc 0.758
+epoch 45 | train loss 0.886 acc 0.882 | val loss 1.125 video acc 0.767
+epoch 46 | train loss 0.914 acc 0.860 | val loss 1.115 video acc 0.783
+epoch 47 | train loss 0.864 acc 0.902 | val loss 1.127 video acc 0.783
+epoch 48 | train loss 0.852 acc 0.918 | val loss 1.105 video acc 0.783
+epoch 49 | train loss 0.894 acc 0.890 | val loss 1.112 video acc 0.783
+epoch 50 | train loss 0.889 acc 0.886 | val loss 1.126 video acc 0.783
+test loss 1.125 | test video acc 0.808
+Evaluating late_fusion
+epoch  1 | train loss 2.320 acc 0.166 | val loss 2.251 video acc 0.175  *best*
+epoch  2 | train loss 2.045 acc 0.320 | val loss 2.069 video acc 0.267  *best*
+epoch  3 | train loss 1.882 acc 0.370 | val loss 1.932 video acc 0.342  *best*
+epoch  4 | train loss 1.816 acc 0.416 | val loss 1.874 video acc 0.367  *best*
+epoch  5 | train loss 1.762 acc 0.456 | val loss 1.867 video acc 0.408  *best*
+epoch  6 | train loss 1.689 acc 0.510 | val loss 1.687 video acc 0.442  *best*
+epoch  7 | train loss 1.635 acc 0.510 | val loss 1.980 video acc 0.442  *best*
+epoch  8 | train loss 1.590 acc 0.534 | val loss 1.569 video acc 0.525  *best*
+epoch  9 | train loss 1.515 acc 0.574 | val loss 1.959 video acc 0.392
+epoch 10 | train loss 1.501 acc 0.592 | val loss 1.684 video acc 0.508
+epoch 11 | train loss 1.491 acc 0.576 | val loss 1.591 video acc 0.525  *best*
+epoch 12 | train loss 1.385 acc 0.660 | val loss 1.455 video acc 0.617  *best*
+epoch 13 | train loss 1.389 acc 0.626 | val loss 1.431 video acc 0.625  *best*
+epoch 14 | train loss 1.361 acc 0.632 | val loss 1.419 video acc 0.567
+epoch 15 | train loss 1.309 acc 0.676 | val loss 1.403 video acc 0.633  *best*
+epoch 16 | train loss 1.314 acc 0.654 | val loss 1.418 video acc 0.658  *best*
+epoch 17 | train loss 1.281 acc 0.700 | val loss 1.353 video acc 0.642
+epoch 18 | train loss 1.285 acc 0.670 | val loss 1.351 video acc 0.692  *best*
+epoch 19 | train loss 1.244 acc 0.694 | val loss 1.353 video acc 0.692  *best*
+epoch 20 | train loss 1.224 acc 0.740 | val loss 1.299 video acc 0.725  *best*
+epoch 21 | train loss 1.208 acc 0.732 | val loss 1.210 video acc 0.725  *best*
+epoch 22 | train loss 1.186 acc 0.722 | val loss 1.315 video acc 0.692
+epoch 23 | train loss 1.202 acc 0.734 | val loss 1.197 video acc 0.742  *best*
+epoch 24 | train loss 1.185 acc 0.724 | val loss 1.247 video acc 0.725
+epoch 25 | train loss 1.159 acc 0.746 | val loss 1.238 video acc 0.708
+epoch 26 | train loss 1.162 acc 0.746 | val loss 1.219 video acc 0.750  *best*
+epoch 27 | train loss 1.127 acc 0.772 | val loss 1.210 video acc 0.767  *best*
+epoch 28 | train loss 1.136 acc 0.748 | val loss 1.197 video acc 0.742
+epoch 29 | train loss 1.134 acc 0.772 | val loss 1.185 video acc 0.775  *best*
+epoch 30 | train loss 1.092 acc 0.798 | val loss 1.152 video acc 0.775  *best*
+epoch 31 | train loss 1.076 acc 0.790 | val loss 1.180 video acc 0.775  *best*
+epoch 32 | train loss 1.095 acc 0.780 | val loss 1.163 video acc 0.767
+epoch 33 | train loss 1.070 acc 0.782 | val loss 1.173 video acc 0.817  *best*
+epoch 34 | train loss 1.052 acc 0.800 | val loss 1.107 video acc 0.817  *best*
+epoch 35 | train loss 1.041 acc 0.820 | val loss 1.092 video acc 0.800
+epoch 36 | train loss 1.062 acc 0.800 | val loss 1.093 video acc 0.808
+epoch 37 | train loss 1.026 acc 0.814 | val loss 1.082 video acc 0.808
+epoch 38 | train loss 1.021 acc 0.818 | val loss 1.090 video acc 0.808
+epoch 39 | train loss 1.033 acc 0.802 | val loss 1.075 video acc 0.808
+epoch 40 | train loss 1.026 acc 0.828 | val loss 1.059 video acc 0.817  *best*
+epoch 41 | train loss 0.988 acc 0.830 | val loss 1.081 video acc 0.800
+epoch 42 | train loss 1.015 acc 0.836 | val loss 1.077 video acc 0.808
+epoch 43 | train loss 0.989 acc 0.834 | val loss 1.078 video acc 0.833  *best*
+epoch 44 | train loss 0.986 acc 0.854 | val loss 1.066 video acc 0.800
+epoch 45 | train loss 0.986 acc 0.844 | val loss 1.066 video acc 0.825
+epoch 46 | train loss 0.983 acc 0.830 | val loss 1.056 video acc 0.808
+epoch 47 | train loss 0.994 acc 0.850 | val loss 1.067 video acc 0.817
+epoch 48 | train loss 0.989 acc 0.830 | val loss 1.067 video acc 0.833  *best*
+epoch 49 | train loss 0.989 acc 0.848 | val loss 1.074 video acc 0.808
+epoch 50 | train loss 1.008 acc 0.840 | val loss 1.069 video acc 0.817
+test loss 1.047 | test video acc 0.792
+Evaluating cnn3D
+epoch  1 | train loss 2.433 acc 0.192 | val loss 2.373 video acc 0.175  *best*
+epoch  2 | train loss 2.120 acc 0.282 | val loss 2.182 video acc 0.225  *best*
+epoch  3 | train loss 2.077 acc 0.320 | val loss 2.117 video acc 0.275  *best*
+epoch  4 | train loss 2.017 acc 0.322 | val loss 2.258 video acc 0.250
+epoch  5 | train loss 1.950 acc 0.356 | val loss 1.996 video acc 0.350  *best*
+epoch  6 | train loss 1.900 acc 0.352 | val loss 2.098 video acc 0.333
+epoch  7 | train loss 1.834 acc 0.406 | val loss 2.137 video acc 0.317
+epoch  8 | train loss 1.728 acc 0.446 | val loss 1.955 video acc 0.350  *best*
+epoch  9 | train loss 1.741 acc 0.458 | val loss 1.978 video acc 0.350  *best*
+epoch 10 | train loss 1.704 acc 0.500 | val loss 1.842 video acc 0.425  *best*
+epoch 11 | train loss 1.634 acc 0.522 | val loss 1.906 video acc 0.375
+epoch 12 | train loss 1.632 acc 0.510 | val loss 1.779 video acc 0.467  *best*
+epoch 13 | train loss 1.590 acc 0.526 | val loss 1.870 video acc 0.458
+epoch 14 | train loss 1.522 acc 0.558 | val loss 1.762 video acc 0.467  *best*
+epoch 15 | train loss 1.499 acc 0.580 | val loss 1.759 video acc 0.517  *best*
+epoch 16 | train loss 1.462 acc 0.604 | val loss 1.781 video acc 0.492
+epoch 17 | train loss 1.423 acc 0.606 | val loss 1.782 video acc 0.483
+epoch 18 | train loss 1.318 acc 0.666 | val loss 1.701 video acc 0.550  *best*
+epoch 19 | train loss 1.310 acc 0.656 | val loss 1.787 video acc 0.492
+epoch 20 | train loss 1.349 acc 0.656 | val loss 1.628 video acc 0.550  *best*
+epoch 21 | train loss 1.251 acc 0.676 | val loss 1.643 video acc 0.533
+epoch 22 | train loss 1.262 acc 0.700 | val loss 1.621 video acc 0.575  *best*
+epoch 23 | train loss 1.262 acc 0.694 | val loss 1.524 video acc 0.592  *best*
+epoch 24 | train loss 1.193 acc 0.738 | val loss 1.616 video acc 0.567
+epoch 25 | train loss 1.186 acc 0.718 | val loss 1.531 video acc 0.633  *best*
+epoch 26 | train loss 1.196 acc 0.710 | val loss 1.469 video acc 0.650  *best*
+epoch 27 | train loss 1.158 acc 0.748 | val loss 1.430 video acc 0.650  *best*
+epoch 28 | train loss 1.116 acc 0.782 | val loss 1.460 video acc 0.642
+epoch 29 | train loss 1.099 acc 0.792 | val loss 1.460 video acc 0.633
+epoch 30 | train loss 1.093 acc 0.766 | val loss 1.358 video acc 0.675  *best*
+epoch 31 | train loss 1.033 acc 0.806 | val loss 1.465 video acc 0.642
+epoch 32 | train loss 1.087 acc 0.790 | val loss 1.467 video acc 0.658
+epoch 33 | train loss 1.067 acc 0.804 | val loss 1.446 video acc 0.725  *best*
+epoch 34 | train loss 1.034 acc 0.802 | val loss 1.432 video acc 0.658
+epoch 35 | train loss 1.023 acc 0.820 | val loss 1.339 video acc 0.700
+epoch 36 | train loss 1.003 acc 0.828 | val loss 1.361 video acc 0.692
+epoch 37 | train loss 1.027 acc 0.826 | val loss 1.348 video acc 0.725  *best*
+epoch 38 | train loss 0.979 acc 0.838 | val loss 1.342 video acc 0.725  *best*
+epoch 39 | train loss 1.008 acc 0.816 | val loss 1.349 video acc 0.708
+epoch 40 | train loss 0.971 acc 0.842 | val loss 1.333 video acc 0.700
+epoch 41 | train loss 0.963 acc 0.844 | val loss 1.289 video acc 0.733  *best*
+epoch 42 | train loss 0.940 acc 0.874 | val loss 1.250 video acc 0.783  *best*
+epoch 43 | train loss 0.994 acc 0.818 | val loss 1.281 video acc 0.767
+epoch 44 | train loss 0.960 acc 0.850 | val loss 1.277 video acc 0.758
+epoch 45 | train loss 0.959 acc 0.834 | val loss 1.289 video acc 0.750
+epoch 46 | train loss 0.943 acc 0.872 | val loss 1.267 video acc 0.750
+epoch 47 | train loss 0.954 acc 0.856 | val loss 1.291 video acc 0.758
+epoch 48 | train loss 0.941 acc 0.860 | val loss 1.273 video acc 0.767
+epoch 49 | train loss 0.942 acc 0.862 | val loss 1.293 video acc 0.758
+epoch 50 | train loss 0.967 acc 0.850 | val loss 1.284 video acc 0.750
+test loss 1.118 | test video acc 0.792
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 29769275: <testjob> in cluster <dcc> Done
+
+Job <testjob> was submitted from host <gbarlogin1> by user <s263577> in cluster <dcc> at Wed Oct 21 10:35:06 2026
+Job was executed on host(s) <4*n-62-18-13>, in queue <c02516>, as user <s263577> in cluster <dcc> at Wed Oct 21 10:35:07 2026
+</zhome/2b/7/233718> was used as the home directory.
+</zhome/2b/7/233718/idlcv> was used as the working directory.
+Started at Wed Oct 21 10:35:07 2026
+Terminated at Wed Oct 21 11:01:54 2026
+Results reported at Wed Oct 21 11:01:54 2026
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/sh
+### ------------- specify queue name ----------------
+#BSUB -q c02516
+#BSUB -gpu "num=1:mode=exclusive_process"
+### ------------- specify job name ----------------
+#BSUB -J testjob
+### ------------- specify number of cores ----------------
+#BSUB -n 4
+#BSUB -R "span[hosts=1]"
+### ------------- specify CPU memory requirements ----------------
+#BSUB -R "rusage[mem=20GB]"
+### ------------- specify wall-clock time (max allowed is 12:00)---------------- 
+#BSUB -W 00:30
+#BSUB -o /zhome/2b/7/233718/idlcv/output/test.out
+#BSUB -e /zhome/2b/7/233718/idlcv/output/error.err
+source ~/idlcv/.venv/bin/activate
+python ~/idlcv/project_2/benchmark_models.py
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   5139.00 sec.
+    Max Memory :                                 7325 MB
+    Average Memory :                             5739.08 MB
+    Total Requested Memory :                     81920.00 MB
+    Delta Memory :                               74595.00 MB
+    Max Swap :                                   -
+    Max Processes :                              18
+    Max Threads :                                55
+    Run time :                                   1607 sec.
+    Turnaround time :                            1608 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file </zhome/2b/7/233718/idlcv/output/error.err> for stderr output of this job.
+
