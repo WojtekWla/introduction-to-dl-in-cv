@@ -1,6 +1,9 @@
 # Ignore exercises folder
 exercices/
 results/
+video_classification_project_2/output/
+video_classification_project_2/ufc10/
+video_classification_project_2/ufc10.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

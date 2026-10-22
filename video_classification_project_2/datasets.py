@@ -1,161 +1,149 @@
-from glob import glob
+"""Load the extracted UCF10 frames and optional precomputed optical flow."""
+from pathlib import Path
 import os
+import tempfile
+
 import numpy as np
 import pandas as pd
 from PIL import Image
 import torch
 from torchvision import transforms as T
 
-class FrameImageDataset(torch.utils.data.Dataset):
-    def __init__(self, 
-    root_dir='/work3/ppar/data/ucf101',
-    split='train', 
-    transform=None
-):
-        self.frame_paths = sorted(glob(f'{root_dir}/frames/{split}/*/*/*.jpg'))
-        self.df = pd.read_csv(f'{root_dir}/metadata/{split}.csv')
+
+DEFAULT_ROOT = Path(__file__).resolve().parent / "ufc10"
+
+
+def resolve_root(root_dir=None):
+    root = Path(root_dir).expanduser() if root_dir is not None else DEFAULT_ROOT
+    root = root.resolve()
+    if not (root / "metadata").is_dir():
+        raise FileNotFoundError(
+            f"Dataset metadata not found in {root}. Pass the extracted dataset directory "
+            "containing metadata/, frames/, and optionally videos/ and flows/."
+        )
+    return root
+
+
+class _VideoDataset(torch.utils.data.Dataset):
+    def __init__(self, root_dir=None, split="train"):
+        self.root_dir = resolve_root(root_dir)
         self.split = split
-        self.transform = transform
-       
+        self.df = pd.read_csv(self.root_dir / "metadata" / f"{split}.csv")
+        if self.df.empty or self.df.video_name.duplicated().any():
+            raise ValueError(f"Metadata for {split} must contain unique, nonempty video records")
+        # Metadata defines a shared ordering for RGB and flow, even without AVI files.
+        self.video_paths = [
+            str(self.root_dir / "videos" / split / path)
+            for path in self.df.video_path
+        ]
+
+    def __len__(self):
+        return len(self.df)
+
+    def _get_meta(self, attr, value):
+        return self.df.loc[self.df[attr] == value]
+
+    def _asset_dir(self, idx, kind):
+        relative = Path(self.df.iloc[idx].video_path).with_suffix("")
+        return self.root_dir / kind / self.split / relative
+
+
+class FrameImageDataset(_VideoDataset):
+    def __init__(self, root_dir=None, split="train", transform=None):
+        super().__init__(root_dir, split)
+        self.transform = transform or T.ToTensor()
+        self.frame_paths = []
+        self.labels = []
+        for idx in range(len(self.df)):
+            directory = self._asset_dir(idx, "frames")
+            paths = sorted(directory.glob("*.jpg"))
+            if not paths:
+                raise FileNotFoundError(f"No extracted frames found in {directory}")
+            self.frame_paths.extend(paths)
+            self.labels.extend([int(self.df.iloc[idx].label)] * len(paths))
+
     def __len__(self):
         return len(self.frame_paths)
 
-    def _get_meta(self, attr, value):
-        return self.df.loc[self.df[attr] == value]
-
     def __getitem__(self, idx):
-        frame_path = self.frame_paths[idx]
-        video_name = frame_path.split('/')[-2]
-        video_meta = self._get_meta('video_name', video_name)
-        label = video_meta['label'].item()
-        
-        frame = Image.open(frame_path).convert("RGB")
-
-        if self.transform:
-            frame = self.transform(frame)
-        else:
-            frame = T.ToTensor()(frame)
-
-        return frame, label
+        with Image.open(self.frame_paths[idx]) as image:
+            frame = self.transform(image.convert("RGB"))
+        return frame, self.labels[idx]
 
 
-class FrameVideoDataset(torch.utils.data.Dataset):
-    def __init__(self, 
-    root_dir = '/work3/ppar/data/ucf101', 
-    split = 'train', 
-    transform = None,
-    stack_frames = True
-):
-
-        self.video_paths = sorted(glob(f'{root_dir}/videos/{split}/*/*.avi'))
-        self.df = pd.read_csv(f'{root_dir}/metadata/{split}.csv')
-        self.split = split
-        self.transform = transform
+class FrameVideoDataset(_VideoDataset):
+    def __init__(self, root_dir=None, split="train", transform=None, stack_frames=True):
+        super().__init__(root_dir, split)
+        self.transform = transform or T.ToTensor()
         self.stack_frames = stack_frames
-        
         self.n_sampled_frames = 10
 
-    def __len__(self):
-        return len(self.video_paths)
-    
-    def _get_meta(self, attr, value):
-        return self.df.loc[self.df[attr] == value]
-
     def __getitem__(self, idx):
-        video_path = self.video_paths[idx]
-        video_name = video_path.split('/')[-1].split('.avi')[0]
-        video_meta = self._get_meta('video_name', video_name)
-        label = video_meta['label'].item()
-
-        video_frames_dir = self.video_paths[idx].split('.avi')[0].replace('videos', 'frames')
-        video_frames = self.load_frames(video_frames_dir)
-
-        if self.transform:
-            frames = [self.transform(frame) for frame in video_frames]
-        else:
-            frames = [T.ToTensor()(frame) for frame in video_frames]
-        
+        frames = [self.transform(frame) for frame in self.load_frames(self._asset_dir(idx, "frames"))]
         if self.stack_frames:
             frames = torch.stack(frames).permute(1, 0, 2, 3)
+        return frames, int(self.df.iloc[idx].label)
 
-
-        return frames, label
-    
     def load_frames(self, frames_dir):
         frames = []
         for i in range(1, self.n_sampled_frames + 1):
-            frame_file = os.path.join(frames_dir, f"frame_{i}.jpg")
-            frame = Image.open(frame_file).convert("RGB")
-            frames.append(frame)
-
+            with Image.open(Path(frames_dir) / f"frame_{i}.jpg") as image:
+                frames.append(image.convert("RGB"))
         return frames
 
 
-class FlowVideoDataset(torch.utils.data.Dataset):
-    def __init__(self,
-    root_dir = '/work3/ppar/data/ucf101',
-    split = 'train',
-    n_flows = 9
-):
-
-        self.video_paths = sorted(glob(f'{root_dir}/videos/{split}/*/*.avi'))
-        self.df = pd.read_csv(f'{root_dir}/metadata/{split}.csv')
-        self.split = split
+class FlowVideoDataset(_VideoDataset):
+    def __init__(self, root_dir=None, split="train", n_flows=9):
+        super().__init__(root_dir, split)
+        if not 1 <= n_flows <= 9:
+            raise ValueError("n_flows must be between 1 and 9 for the ten extracted frames")
         self.n_flows = n_flows
 
-    def __len__(self):
-        return len(self.video_paths)
-
-    def _get_meta(self, attr, value):
-        return self.df.loc[self.df[attr] == value]
-
     def __getitem__(self, idx):
-        video_path = self.video_paths[idx]
-        video_name = video_path.split('/')[-1].split('.avi')[0]
-        video_meta = self._get_meta('video_name', video_name)
-        label = video_meta['label'].item()
-
-        video_flows_dir = self.video_paths[idx].split('.avi')[0].replace('videos', 'flows')
-        flows = self.load_flows(video_flows_dir)
-
-        flow = np.concatenate(flows, axis=0)  # [2 * n_flows, H, W]
-        flow = torch.from_numpy(flow).float()
-
-        return flow, label
+        flows = self.load_flows(self._asset_dir(idx, "flows"))
+        return torch.from_numpy(np.concatenate(flows, axis=0)).float(), int(self.df.iloc[idx].label)
 
     def load_flows(self, flows_dir):
+        """Reuse supplied flow, or lazily compute and cache Farneback flow."""
+        flows_dir = Path(flows_dir)
+        relative = flows_dir.relative_to(self.root_dir / "flows")
+        frames_dir = self.root_dir / "frames" / relative
         flows = []
         for i in range(1, self.n_flows + 1):
-            flow_file = os.path.join(flows_dir, f"flow_{i}_{i + 1}.npy")
-            flow = np.load(flow_file)
+            flow_file = flows_dir / f"flow_{i}_{i + 1}.npy"
+            if flow_file.exists():
+                flow = np.load(flow_file, allow_pickle=False)
+            else:
+                try:
+                    import cv2
+                except ImportError as exc:
+                    raise ImportError("Generating missing flow requires opencv-python-headless. Run `uv sync`.") from exc
+                images = []
+                for frame_id in (i, i + 1):
+                    with Image.open(frames_dir / f"frame_{frame_id}.jpg") as image:
+                        images.append(np.asarray(image.convert("L")))
+                flow = cv2.calcOpticalFlowFarneback(
+                    images[0], images[1], None, 0.5, 3, 15, 3, 5, 1.2, 0
+                ).transpose(2, 0, 1).copy()
+                flows_dir.mkdir(parents=True, exist_ok=True)
+                # Atomic replacement also permits concurrent data-loader workers.
+                with tempfile.NamedTemporaryFile(dir=flows_dir, suffix=".npy", delete=False) as tmp:
+                    temp_path = Path(tmp.name)
+                    try:
+                        np.save(tmp, flow)
+                        tmp.close()
+                        os.replace(temp_path, flow_file)
+                    finally:
+                        temp_path.unlink(missing_ok=True)
+            if flow.ndim != 3 or flow.shape[0] != 2:
+                raise ValueError(f"Expected flow shaped [2, H, W] in {flow_file}, got {flow.shape}")
             flows.append(flow)
-
         return flows
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from torch.utils.data import DataLoader
 
-    root_dir = '/work3/ppar/data/ucf101'
-
-    transform = T.Compose([T.Resize((64, 64)),T.ToTensor()])
-    frameimage_dataset = FrameImageDataset(root_dir=root_dir, split='val', transform=transform)
-    framevideostack_dataset = FrameVideoDataset(root_dir=root_dir, split='val', transform=transform, stack_frames = True)
-    framevideolist_dataset = FrameVideoDataset(root_dir=root_dir, split='val', transform=transform, stack_frames = False)
-
-
-    frameimage_loader = DataLoader(frameimage_dataset,  batch_size=8, shuffle=False)
-    framevideostack_loader = DataLoader(framevideostack_dataset,  batch_size=8, shuffle=False)
-    framevideolist_loader = DataLoader(framevideolist_dataset,  batch_size=8, shuffle=False)
-
-    # for frames, labels in frameimage_loader:
-    #     print(frames.shape, labels.shape) # [batch, channels, height, width]
-
-    # for video_frames, labels in framevideolist_loader:
-    #     print(45*'-')
-    #     for frame in video_frames: # loop through number of frames
-    #         print(frame.shape, labels.shape)# [batch, channels, height, width]
-
-    for video_frames, labels in framevideostack_loader:
-        print(video_frames.shape, labels.shape) # [batch, channels, number of frames, height, width]
-            
+    dataset = FrameVideoDataset(split="val", transform=T.Compose([T.Resize((64, 64)), T.ToTensor()]))
+    frames, labels = next(iter(DataLoader(dataset, batch_size=8)))
+    print(frames.shape, labels.shape)
