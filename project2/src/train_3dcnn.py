@@ -8,10 +8,10 @@ import time
 import os
 
 from pathlib import Path
-from .datasets import FrameVideoDataset
+from datasets import FrameVideoDataset
 
 # based on the folder structure on DTU HPC server
-data_root = Path("/dtu/datasets1/02516/ufc10/")
+data_root = Path("/dtu/datasets1/02516/ucf101_noleakage")
 
 # the 3d CNN definition
 class Model(nn.Module):

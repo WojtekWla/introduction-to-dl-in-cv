@@ -1,0 +1,3 @@
+==== Summary: pretrained models on noleakage ====
+ latefusion_pretrained | best val acc 48.33% | test loss 1.8107 | test acc 44.17%
+      cnn3d_pretrained | best val acc 86.67% | test loss 1.1513 | test acc 74.17%
