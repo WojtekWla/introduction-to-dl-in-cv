@@ -17,11 +17,14 @@ class SingleFrame(nn.Module):
         super().__init__()
 
         self.conv = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1), nn.ReLU(),
+            nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_features=16), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
-            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1), nn.ReLU(),
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_features=32), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1), nn.ReLU(),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_features=64), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
             nn.AdaptiveAvgPool2d((4, 4)),
         )
@@ -134,8 +137,14 @@ if __name__ == '__main__':
         batch_size=64, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True
     )
 
+    train_tf = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+        transforms.ToTensor(),
+    ])
+
     train_loader = DataLoader(
-        FrameImageDataset(root_dir=root_dir, split='train'),
+        FrameImageDataset(root_dir=root_dir, split='train', transform=train_tf),
         batch_size=64, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True
     )
 
@@ -145,7 +154,7 @@ if __name__ == '__main__':
     )
 
     model = SingleFrame(num_classes=10).to(device)
-    model, hist_scratch = fit(model, train_loader, validate_loader, 0.01, num_epochs=30)
+    model, hist_scratch = fit(model, train_loader, validate_loader, 0.001, num_epochs=30)
 
     test_loss, test_acc = evaluate_video(model, test_loader, nn.CrossEntropyLoss(label_smoothing=0.1))
     print(f'test loss {test_loss:.3f} | test video acc {test_acc:.3f}')

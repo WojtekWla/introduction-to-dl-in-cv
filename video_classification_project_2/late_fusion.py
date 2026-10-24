@@ -18,19 +18,26 @@ class LateFusion(nn.Module):
             nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_features=16), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(0.2),
             nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_features=32), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(0.2),
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_features=64), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
-            nn.AdaptiveAvgPool2d((4,4))
+            nn.Dropout2d(0.2),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_features=128), nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(0.2),
+            nn.AdaptiveAvgPool2d((2, 2))
         )
 
         self.linear = nn.Sequential(
             nn.Flatten(),
             nn.Dropout(0.5),
-            nn.Linear(64 * 4 * 4, num_classes)
+            nn.Linear(128 * 2 * 2, num_classes)
         )
 
     def forward(self, x):
@@ -123,9 +130,10 @@ if __name__ == '__main__':
     np.random.seed(0)
 
     # root_dir = "/dtu/datasets1/02516/ufc10"
-    root_dir = "/Users/wojciechwladzinski/projects/uni/introduction-to-dl-in-cv/data/ufc10"
+    root_dir = "/dtu/datasets1/02516/ucf101_noleakage"
 
     train_tf = transforms.Compose([
+        transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
         transforms.RandomHorizontalFlip(),
         transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
         transforms.ToTensor(),

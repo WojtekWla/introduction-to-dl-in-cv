@@ -14,13 +14,21 @@ DIAGRAM2 ?= *_acc.png
 
 .PHONY: deploy download logs diagrams
 
-# Upload FILE to the cluster and submit the batch job (same as deploy.sh)
+# file to deploy: whatever's typed after "deploy" on the command line
+# (e.g. `make deploy late_fusion.py`), falling back to FILE if nothing's given
+DEPLOY_FILE := $(word 2,$(MAKECMDGOALS))
+
+.PHONY: $(DEPLOY_FILE)
+$(DEPLOY_FILE):
+	@:
+
+# Upload FILE (or the file passed after "deploy") to the cluster and submit the batch job
 deploy:
-	@echo "Uploading $(FILE) to $(REMOTE_HOST):$(REMOTE_DIR)"
-	scp "$(FILE)" "$(REMOTE_HOST):$(REMOTE_DIR)"
-	@echo "Submitting batch job on $(REMOTE_HOST)"
-	REMOTE_CMD="bsub -app c02516_1g.10gb < $(SCRIPT_LOCATION)create_batch_job.sh"; \
-	ssh -t "$(REMOTE_HOST)" "bash -lic $$(printf '%q' "$$REMOTE_CMD")"
+	@echo "Uploading $(or $(DEPLOY_FILE),$(FILE)) to $(REMOTE_HOST):$(REMOTE_DIR)"
+	scp "$(or $(DEPLOY_FILE),$(FILE))" "$(REMOTE_HOST):$(REMOTE_DIR)"
+# 	@echo "Submitting batch job on $(REMOTE_HOST)"
+# 	REMOTE_CMD="bsub -app c02516_1g.10gb < $(SCRIPT_LOCATION)create_batch_job.sh"; \
+# 	ssh -t "$(REMOTE_HOST)" "bash -lic $$(printf '%q' "$$REMOTE_CMD")"
 
 # Download test.out + error.err from the cluster output directory
 logs:
