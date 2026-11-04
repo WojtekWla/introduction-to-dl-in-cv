@@ -1,9 +1,16 @@
+
+
 # Ignore exercises folder
+
 exercices/
 results/
 video_classification_project_2/output/
-video_classification_project_2/ufc10/
-video_classification_project_2/ufc10.zip
+video_classification_project_2/ucf101/
+video_classification_project_2/ucf101.zip
+video_classification_project_2/ucf101_noleakage
+video_classification_project_2/ucf101_noleakage.zip
+image_segmentation_project_3/runs
+image_segmentation_project_3/ph2_annotated
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -14,6 +21,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+.DS_Store
 .Python
 build/
 develop-eggs/

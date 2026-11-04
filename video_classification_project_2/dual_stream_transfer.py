@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 import copy
 
 import matplotlib.pyplot as plt
@@ -23,8 +24,12 @@ class DinoSpatial(nn.Module):
         self.backbone.requires_grad_(False)
         self.backbone.eval()
         self.classifier = nn.Sequential(
+            nn.Conv1d(384, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool1d(1),
+            nn.Flatten(),
             nn.Dropout(0.2),
-            nn.Linear(self.backbone.config.hidden_size, num_classes),
+            nn.Linear(128, num_classes),
         )
 
     def train(self, mode=True):
@@ -40,7 +45,7 @@ class DinoSpatial(nn.Module):
         with torch.no_grad():
             embeddings = self.backbone(pixel_values=rgb).pooler_output
 
-        video_features = embeddings.reshape(batch, frames, -1).mean(dim=1)
+        video_features = embeddings.reshape(batch, frames, -1).transpose(1, 2)
         return self.classifier(video_features)
 
 
@@ -104,8 +109,13 @@ def train_one_epoch(model, loader, optimizer, loss_fn):
     for rgb, flow, labels in tqdm(loader, leave=False):
         rgb, flow, labels = rgb.to(device), flow.to(device), labels.to(device)
         optimizer.zero_grad()
-        logits = model(rgb, flow)
-        loss = loss_fn(logits, labels)
+        spatial_logits = model.spatial(rgb)
+        temporal_logits = model.temporal(flow)
+        logits = (spatial_logits + temporal_logits) / 2
+        combined_loss = loss_fn(logits, labels)
+        spatial_loss = loss_fn(spatial_logits, labels)
+        temporal_loss = loss_fn(temporal_logits, labels)
+        loss = combined_loss + 0.25 * spatial_loss + 0.25 * temporal_loss
         loss.backward()
         optimizer.step()
         total_loss += loss.item() * labels.size(0)
@@ -129,6 +139,17 @@ def evaluate_video(model, loader, loss_fn):
 
 
 def fit(model, train_loader, val_loader, lr=1e-3, num_epochs=50, weight_decay=1e-4):
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    while True:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        checkpoint = out_dir / f"dual_stream_dinov3_temporal_aux_noleakage_{timestamp}.pt"
+        try:
+            checkpoint.touch(exist_ok=False)
+            break
+        except FileExistsError:
+            continue
+    print(f"Checkpoint: {checkpoint}")
     loss_fn = nn.CrossEntropyLoss(label_smoothing=0.1)
     optimizer = torch.optim.AdamW(
         (p for p in model.parameters() if p.requires_grad),
@@ -150,6 +171,7 @@ def fit(model, train_loader, val_loader, lr=1e-3, num_epochs=50, weight_decay=1e
         if is_best:
             best_acc = val_acc
             best_state = copy.deepcopy(model.state_dict())
+            torch.save(best_state, checkpoint)
 
         print(
             f"epoch {epoch:2d} | train loss {train_loss:.3f} acc {train_acc:.3f} "
@@ -161,7 +183,37 @@ def fit(model, train_loader, val_loader, lr=1e-3, num_epochs=50, weight_decay=1e
     return model, history
 
 
+@torch.no_grad()
+def inspect_streams(model, loader):
+    model.eval()
+    weights = [0, 0.25, 0.5, 0.75, 1]
+    correct = {w: 0 for w in weights}
+    total = 0
+
+    for rgb, flow, labels in loader:
+        rgb = rgb.to(device)
+        flow = flow.to(device)
+        labels = labels.to(device)
+
+        spatial = model.spatial(rgb)
+        temporal = model.temporal(flow)
+
+        for w in weights:
+            logits = w * spatial + (1 - w) * temporal
+            correct[w] += (logits.argmax(1) == labels).sum().item()
+
+        total += labels.size(0)
+
+    for w in weights:
+        print(f"DINO weight {w:.2f}: {correct[w] / total:.3f}")
+
+        
+
 if __name__ == "__main__":
+    inspect_only = False
+    # Set this to the checkpoint path printed by the training run (relative to this script).
+    inspect_checkpoint = Path("output/dual_stream_dinov3_temporal_aux_noleakage_YYYYMMDD_HHMMSS_ffffff.pt")
+
     if torch.cuda.is_available():
         device = torch.device("cuda")
     elif torch.backends.mps.is_available():
@@ -174,7 +226,8 @@ if __name__ == "__main__":
     np.random.seed(0)
 
     # root_dir = "/dtu/datasets1/02516/ucf101_noleakage"
-    root_dir = "/Users/makro/Projects/DTU/Vision/video_classification_project_2/ufc10"
+    # root_dir = "/Users/makro/Projects/DTU/Vision/video_classification_project_2/ucf101"
+    root_dir = "/Users/makro/Projects/DTU/Vision/video_classification_project_2/ucf101_noleakage"
     batch_size = 4
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
@@ -203,7 +256,18 @@ if __name__ == "__main__":
     model = DualStream(num_classes=10).to(device)
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Trainable parameters: {trainable:,}")
+    if inspect_only:
+        checkpoint = Path(__file__).resolve().parent / inspect_checkpoint
+        if not checkpoint.is_file():
+            print(f"Error: checkpoint not found: {checkpoint}")
+            raise SystemExit(1)
+        model.load_state_dict(torch.load(checkpoint, map_location=device, weights_only=True))
+        inspect_streams(model, val_loader)
+        raise SystemExit(0)
+
     model, history = fit(model, train_loader, val_loader)
+    
+    inspect_streams(model, val_loader)
 
     test_loss, test_acc = evaluate_video(
         model, test_loader, nn.CrossEntropyLoss(label_smoothing=0.1)
@@ -212,7 +276,6 @@ if __name__ == "__main__":
 
     out_dir = Path("output")
     out_dir.mkdir(exist_ok=True)
-    torch.save(model.state_dict(), out_dir / "dual_stream_dinov3.pt")
 
     epochs = range(1, len(history["train_loss"]) + 1)
     for metric in ("loss", "acc"):
