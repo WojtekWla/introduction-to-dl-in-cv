@@ -18,8 +18,7 @@ import torchvision.transforms.functional as TF            # NEW
 from torchvision import tv_tensors                         # NEW
 
 
-# DATA_ROOT = os.environ.get("DATA_ROOT", "/dtu/datasets1/02516")
-DATA_ROOT = "../data"
+DATA_ROOT = os.environ.get("DATA_ROOT", "/dtu/datasets1/02516")
 
 
 # Reproducible train / val / test split  (same seed -> same split every run)
