@@ -1,9 +1,3 @@
-"""Validation Dice per epoch for every run in run_log.txt.
-
-Usage:  python val_curves.py run_log.txt
-Run names are read from the log ("Best val Dice: ... (model: <tag>_best.pt ...").
-One panel per dataset (ph2, drive, drive576), encoder-decoder vs U-Net in each.
-"""
 import re
 import sys
 import matplotlib

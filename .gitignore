@@ -11,6 +11,10 @@ video_classification_project_2/ucf101_noleakage
 video_classification_project_2/ucf101_noleakage.zip
 image_segmentation_project_3/runs
 image_segmentation_project_3/ph2_annotated
+image_segmentation_project_3/loss_ablation
+image_segmentation_project_3/click_ablation
+Project2 copy/
+project2/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

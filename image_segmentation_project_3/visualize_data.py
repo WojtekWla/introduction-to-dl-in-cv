@@ -1,21 +1,8 @@
-"""
-Sanity-check figures for the report (Task 1).
-
-Saves one PNG per dataset showing a few training samples:
-  PH2  : image | lesion mask | overlay
-  DRIVE: image | vessel mask (1st_manual) | FOV mask | vessel overlay
-
-Usage (on the cluster, next to seg_datasets_from_notebook.py):
-    python visualize_data.py            # saves PNGs in the current folder
-    python visualize_data.py outdir 4   # output folder, number of samples
-
-Needs matplotlib:  pip install matplotlib
-"""
 import os
 import sys
 
 import matplotlib
-matplotlib.use("Agg")  # no display needed on the cluster
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import torchvision.transforms as transforms

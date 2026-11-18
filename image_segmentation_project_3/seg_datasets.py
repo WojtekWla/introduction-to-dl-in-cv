@@ -1,10 +1,3 @@
-"""
-IDLCV Project 3 (Segmentation) - Task 1: PH2 + DRIVE data loaders.
-Built from Project3.ipynb. Run on the DTU HPC, where /dtu/datasets1/02516 exists:
-
-Set DATA_ROOT in the environment to point somewhere else (e.g. for a local test).
-"""
-
 import os
 import glob
 import random
@@ -14,15 +7,12 @@ import torch
 from PIL import Image
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
-import torchvision.transforms.functional as TF            # NEW
-from torchvision import tv_tensors                         # NEW
+import torchvision.transforms.functional as TF
+from torchvision import tv_tensors
 
 
-# DATA_ROOT = os.environ.get("DATA_ROOT", "/dtu/datasets1/02516")
-DATA_ROOT = "../data"
+DATA_ROOT = os.environ.get("DATA_ROOT", "/dtu/datasets1/02516")
 
-
-# Reproducible train / val / test split  (same seed -> same split every run)
 
 def make_splits(items, val_frac=0.15, test_frac=0.15, seed=42):
     items = list(items)
@@ -37,7 +27,6 @@ def make_splits(items, val_frac=0.15, test_frac=0.15, seed=42):
 
 
 def _binary_mask(label_pil, size):
-    """Nearest-neighbour resize + threshold -> float tensor (1,H,W) in {0,1}."""
     label_pil = label_pil.convert("L").resize((size, size), Image.NEAREST)
     arr = (np.asarray(label_pil) > 127).astype(np.float32)
     return torch.from_numpy(arr).unsqueeze(0)
@@ -58,12 +47,11 @@ def _annotated_points(label_pil, size, pos=10, neg=10, sampling="random"):
     elif sampling == "biased":
         m = mask[None, None]
 
-        # Erode the lesion by approximately 10 pixels
         eroded = 1 - F.max_pool2d(1 - m, kernel_size=21, stride=1, padding=10)[0, 0]
 
         pos_y, pos_x = torch.where(eroded == 1)
         neg_y, neg_x = torch.where(mask == 0)
-        
+
     else:
         raise ValueError(f"Unsupported sampling strategy: {sampling}")
 
@@ -80,10 +68,7 @@ def _annotated_points(label_pil, size, pos=10, neg=10, sampling="random"):
 
 
 
-def _apply_joint(joint_transform, image, label):                       # NEW
-    """Run a torchvision.transforms.v2 pipeline on image AND mask together.
-    The mask is wrapped as tv_tensors.Mask, so v2 uses the same random
-    parameters for both and nearest-neighbour interpolation for the mask."""
+def _apply_joint(joint_transform, image, label):
     img = tv_tensors.Image(TF.pil_to_tensor(image))
     mask = tv_tensors.Mask(torch.from_numpy(np.array(label))[None])
     img, mask = joint_transform(img, mask)
@@ -92,13 +77,12 @@ def _apply_joint(joint_transform, image, label):                       # NEW
     return image, label
 
 
-# PH2 - skin lesion segmentation
 class PH2(torch.utils.data.Dataset):
     def __init__(self, split, transform, size=256,
                  data_path=os.path.join(DATA_ROOT, "PH2_Dataset_images"),
-                 joint_transform=None):                                 # NEW
+                 joint_transform=None):
         self.transform = transform
-        self.joint_transform = joint_transform                          # NEW
+        self.joint_transform = joint_transform
         self.size = size
         self.image_paths = [
             os.path.join(data_path, c, f"{c}_Dermoscopic_Image", f"{c}.bmp")
@@ -116,8 +100,8 @@ class PH2(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         image = Image.open(self.image_paths[idx]).convert("RGB")
-        label = Image.open(self.label_paths[idx]).convert("L")          # CHANGED
-        if self.joint_transform is not None:                            # NEW
+        label = Image.open(self.label_paths[idx]).convert("L")
+        if self.joint_transform is not None:
             image, label = _apply_joint(self.joint_transform, image, label)
         X = self.transform(image)
         Y = _binary_mask(label, self.size)
@@ -155,7 +139,6 @@ class PH2_Annotated(PH2):
 
         image = image.resize((self.size, self.size), Image.BILINEAR)
         if self.joint_transform is not None:
-            # Zero padding must decode to unlabeled (-1), not a negative click.
             label = Image.fromarray((Y[0].numpy() + 1).astype(np.uint8))
             image, label = _apply_joint(self.joint_transform, image, label)
             Y = torch.from_numpy(np.array(label)).unsqueeze(0).float() - 1
@@ -163,15 +146,14 @@ class PH2_Annotated(PH2):
         return X, Y
 
 
-# DRIVE - retinal blood vessel segmentation
 class DRIVE(torch.utils.data.Dataset):
     def __init__(self, split, transform, size=256,
                  data_path=os.path.join(DATA_ROOT, "DRIVE", "training"),
-                 return_fov=False, joint_transform=None):               # NEW
-        if return_fov and joint_transform is not None:                  # NEW
+                 return_fov=False, joint_transform=None):
+        if return_fov and joint_transform is not None:
             raise ValueError("return_fov=True cannot be combined with joint_transform.")
         self.transform = transform
-        self.joint_transform = joint_transform                          # NEW
+        self.joint_transform = joint_transform
         self.size = size
         self.return_fov = return_fov
         self.image_paths = [
@@ -191,8 +173,8 @@ class DRIVE(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         image = Image.open(self.image_paths[idx]).convert("RGB")
-        label = Image.open(self.label_paths[idx]).convert("L")          # CHANGED
-        if self.joint_transform is not None:                            # NEW
+        label = Image.open(self.label_paths[idx]).convert("L")
+        if self.joint_transform is not None:
             image, label = _apply_joint(self.joint_transform, image, label)
         X = self.transform(image)
         Y = _binary_mask(label, self.size)
@@ -202,11 +184,6 @@ class DRIVE(torch.utils.data.Dataset):
         return X, Y
 
 
-# Convenience: build the three DataLoaders for either dataset.
-# Resize((size,size)) and ToTensor are ALWAYS applied to the image.
-#   train_transform : IMAGE-ONLY transforms.Compose for the train split
-#   eval_transform  : IMAGE-ONLY transforms.Compose for val/test (normally None)
-#   joint_transform : transforms.v2.Compose applied to IMAGE + MASK, train only
 def build_loaders(dataset_cls, ids_fn, size=256, batch_size=6, seed=42,
                   num_workers=0, train_transform=None, eval_transform=None,
                   joint_transform=None, pos_clicks=10, neg_clicks=10,
@@ -236,7 +213,6 @@ def build_loaders(dataset_cls, ids_fn, size=256, batch_size=6, seed=42,
 
 
 if __name__ == "__main__":
-    # Example usage / quick check (run on the cluster where the data is mounted)
     from torchvision.transforms import v2
     ph2_joint = v2.Compose([v2.RandomHorizontalFlip(),
                             v2.RandomAffine(degrees=25, translate=(0.1, 0.1))])
