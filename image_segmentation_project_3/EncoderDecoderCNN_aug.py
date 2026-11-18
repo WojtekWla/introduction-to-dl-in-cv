@@ -12,7 +12,7 @@ from seg_datasets import PH2, PH2_Annotated, DRIVE, build_loaders, make_splits
 from models import EncDecCNN, UNet, dice_score, evaluate
 
 import matplotlib
-matplotlib.use("Agg")                       # cluster has no display -> save plots to file
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,26 +28,22 @@ if torch.backends.mps.is_available():
     
 print("Running on:", device)
 
-# NEW: number of epochs in one place. Quick test run:  EPOCHS=1 python EncoderDecoderCNN.py
 NUM_EPOCHS = int(os.environ.get("EPOCHS", 100))
 print("Epochs:", NUM_EPOCHS)
 
-size = 256          # PH2 and the standard DRIVE runs
-size_hr = 576       # NEW: DRIVE near-native resolution (565x584 -> 576x576, divisible by 16)
+size = 256
+size_hr = 576
 
-# image only (like ColorJitter): plain transforms.Compose
 train_transform = transforms.Compose([
     transforms.ColorJitter(brightness=0.2, contrast=0.2),
 ])
 
-# image AND mask together (rotation, translation, flips): v2.Compose
 joint_transform = v2.Compose([
     v2.RandomHorizontalFlip(),
     v2.RandomVerticalFlip(),
     v2.RandomAffine(degrees=25, translate=(0.1, 0.1)),
 ])
 
-# PH2: augmented (train split only)
 ph2_loaders, ph2_split = build_loaders(PH2, PH2.list_cases, size=size, batch_size=6,
                                        train_transform=train_transform,
                                        joint_transform=joint_transform)
@@ -59,32 +55,26 @@ ph2_annotated_loaders, _ = build_loaders(PH2_Annotated, PH2_Annotated.list_cases
                                        joint_transform=joint_transform)
 ph2_annotation_tag = os.path.basename(ph2_annotated_loaders["train"].dataset.annotation_dir)
 
-# DRIVE: augmented (train split only), same transforms as PH2
 drive_loaders, drive_split = build_loaders(DRIVE, DRIVE.list_ids, size=size, batch_size=2,
                                            train_transform=train_transform,
                                            joint_transform=joint_transform)
 
-# DRIVE at near-native resolution, same split (same seed), augmented
 drive_hr_loaders, _ = build_loaders(DRIVE, DRIVE.list_ids, size=size_hr, batch_size=2,
                                     train_transform=train_transform,
                                     joint_transform=joint_transform)
 
-#Set split for all datasets
 train_ph2, val_ph2, test_ph2 = ph2_loaders["train"], ph2_loaders["val"], ph2_loaders["test"]
 
 train_drive, val_drive, test_drive = drive_loaders["train"], drive_loaders["val"], drive_loaders["test"]
 
-train_drive_hr, val_drive_hr, test_drive_hr = (drive_hr_loaders["train"],             # NEW
+train_drive_hr, val_drive_hr, test_drive_hr = (drive_hr_loaders["train"],
                                                drive_hr_loaders["val"], drive_hr_loaders["test"])
 
-#PH2 eval split - needed as initially its called with augmentation
 ph2_eval, _ = build_loaders(PH2, PH2.list_cases, size=size, batch_size=6)
 
-#DRIVE eval splits - train split evaluated WITHOUT augmentation
 drive_eval, _ = build_loaders(DRIVE, DRIVE.list_ids, size=size, batch_size=2)
 drive_hr_eval, _ = build_loaders(DRIVE, DRIVE.list_ids, size=size_hr, batch_size=2)
 
-#Exercise 2/3 - EncDecCNN and UNet are defined in models.py (shared with loss_ablation.py)
 
 def train(model, optimizer, loss_fn, train_loader, val_loader, num_epochs=50, tag="model"):
     train_losses, val_losses, val_dices = [], [], []
@@ -101,7 +91,6 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, num_epochs=50, ta
         log.write(f"Training {tag}\n")
 
     for epoch in tqdm(range(num_epochs), unit='epoch'):
-        #Train
         train_loss = 0.0
         model.train()
         for minibatch_no, (data, target) in enumerate(train_loader):
@@ -117,10 +106,8 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, num_epochs=50, ta
             loss = loss_fn(output[labeled], target[labeled])
             loss.backward()
             optimizer.step()
-            #data has shape (batch, channels, height, width) -> data.size(0) = batch size
-            train_loss += loss.item() * data.size(0)   #batch average loss x images in batch = batch total
+            train_loss += loss.item() * data.size(0)
 
-        #Validate
         val_loss, val_dice = 0.0, 0.0
         model.eval()
         for minibatch_no, (data, target) in enumerate(val_loader):
@@ -134,7 +121,7 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, num_epochs=50, ta
             val_loss += loss_fn(output, target).item() * data.size(0)
             val_dice += dice_score(output, target) * data.size(0)
 
-        train_loss /= len(train_loader.dataset) #Dividing total in batch by total in split
+        train_loss /= len(train_loader.dataset)
         val_loss   /= len(val_loader.dataset)
         val_dice   /= len(val_loader.dataset)
         train_losses.append(train_loss)
@@ -168,14 +155,12 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, num_epochs=50, ta
         fig.savefig(os.path.join(epoch_dir, f"epoch_{epoch + 1:03d}.png"), dpi=120)
         plt.close(fig)
 
-        # Save best model by val dice
         if val_dice > best_dice:
             best_dice = val_dice
             torch.save(model.state_dict(), checkpoint_path)
             print(f"  -> new best val Dice {best_dice:.4f}, saved {checkpoint_path}", flush=True)
 
 
-    # Plot after all epoch
     fig, ax = plt.subplots(1, 2, figsize=(10, 4))
     ax[0].plot(train_losses, label='train')
     ax[0].plot(val_losses,   label='val')
@@ -191,15 +176,13 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, num_epochs=50, ta
     return {"train_loss": train_losses, "val_loss": val_losses,
             "val_dice": val_dices, "best_dice": best_dice}
 
-# verify shapes at each layer (copy this output into the report)
 print("\nU-Net shapes, 256x256 input:")
 UNet().to(device)(torch.zeros(1, 3, size, size, device=device), verbose=True)
-print("\nU-Net shapes, 576x576 input:")                                                  # NEW
+print("\nU-Net shapes, 576x576 input:")
 UNet().to(device)(torch.zeros(1, 3, size_hr, size_hr, device=device), verbose=True)
 
 loss_fn = nn.BCEWithLogitsLoss()
 
-# AUG RUN: only the four DRIVE experiments, now with augmentation: (tag, model class, train loader, val loader)
 experiments = [
     # ("encdec_ph2",      EncDecCNN, train_ph2,      val_ph2),   # PH2 already done (unchanged)
     # ("encdec_drive",    EncDecCNN, train_drive,    val_drive),
@@ -210,15 +193,12 @@ experiments = [
         (f"unet_ph2_{ph2_annotation_tag}", UNet, ph2_annotated_loaders["train"], ph2_annotated_loaders["val"]),
 ]
 
-#Actually Training (fresh model + optimizer for every experiment)
 for tag, model_cls, tr_loader, va_loader in experiments:
     print(f"\n===== Training {tag} =====", flush=True)
     model = model_cls().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     train(model, optimizer, loss_fn, tr_loader, va_loader, num_epochs=NUM_EPOCHS, tag=tag)
 
-# Evaluation: best model (highest val Dice), five metrics, all three splits
-# Train splits are evaluated WITHOUT augmentation (ph2_eval, drive_eval, drive_hr_eval)
 eval_sets = {
     f"ph2_{ph2_annotation_tag}": [("train", ph2_eval["train"]), ("val", ph2_annotated_loaders["val"]),
                       ("test", ph2_annotated_loaders["test"])],

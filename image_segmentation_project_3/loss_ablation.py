@@ -1,64 +1,3 @@
-"""
-IDLCV Project 3 - Loss function ablation (DRIVE and PH2 segmentation).
-
-What this does
----------------
-DRIVE vessel masks are heavily class-imbalanced: vessel (foreground) pixels
-are a small fraction of the image, background dominates. PH2 lesion masks
-are much more balanced (large, smooth lesions) - the course's own baseline
-reached ~0.92 Dice on PH2 with plain, untuned CrossEntropy, no reweighting
-needed. DATASET below ("DRIVE" or "PH2") picks which dataset this
-invocation runs against - size/batch_size switch automatically to match
-each dataset's established settings (see the DATASET block). This script
-trains segmentation architectures already defined in models.py - EncDecCNN
-(plain encoder-decoder), UNet (same backbone + skip connections), and
-UNetConvT (UNet with a learnable ConvTranspose2d decoder) - with pixel-wise
-losses, to see which loss best handles each dataset's imbalance:
-
-  1. CrossEntropy - plain nn.BCEWithLogitsLoss(). Binary cross-entropy per
-     pixel, no class weighting. The baseline.
-  2. Focal        - torchvision.ops.sigmoid_focal_loss(). Down-weights
-     already-easy (confidently correct) pixels via (1-p)^gamma so training
-     focuses on hard pixels, and reweights classes via alpha.
-  3. WeightedCE   - nn.BCEWithLogitsLoss(pos_weight=...). Plain BCE, but the
-     foreground term is scaled up by the train-set background/foreground
-     pixel ratio, so missing a vessel pixel costs more than missing a
-     background pixel.
-
-Architecture, data augmentation, optimizer and image resolution are kept
-IDENTICAL to EncoderDecoderCNN_aug.py and are NOT swept here - this is a
-loss-function-only ablation, by design (see the project instructions: full
-ablations across every axis are not expected, for GPU budget reasons).
-Model selection within a run is always by validation Dice, never by
-validation loss - the three losses live on different numeric scales, so
-loss values are not comparable across runs.
-
-BEST_CONFIGS is an explicit list of (model, lr, loss, focal_alpha)
-combinations to run THIS invocation, in one `python loss_ablation.py` call
-- see the BEST_CONFIGS block for what's included per DATASET and why. This
-is NOT a fresh grid search (especially not DRIVE at SIZE=576, which is ~4x
-the compute of 256x256 per epoch) - edit BEST_CONFIGS directly to add/
-remove entries. summary.csv/leaderboard.txt/summary_comparison.png
-accumulate across invocations, keyed on dataset+model+lr+loss, so running
-PH2 then DRIVE (or vice versa) in the same output folder adds rows for
-both instead of overwriting - no need to move the folder aside just for a
-dataset switch (optimizer/weight-decay changes still aren't part of the
-key, so those still need the manual-rename workflow from past runs).
-
-Output layout (all paths below are the single source of truth - change here,
-nowhere else, if you want a different layout):
-  loss_ablation/
-    models/  best_<Model>_lr<LR>_<Loss>.pt       best-val-Dice checkpoint
-    figures/ loss_<Model>_lr<LR>_<Loss>.png       train/val loss curve
-             accuracy_<Model>_lr<LR>_<Loss>.png   val Dice ("accuracy") curve
-             prediction_<Model>_lr<LR>_<Loss>.png image | GT | prediction, best epoch
-             summary_comparison.png              test Dice, every run so far, ranked by val Dice
-    metrics/ metrics_<Model>_lr<LR>_<Loss>.txt     5 metrics x {train,val,test} + resolved hyperparams
-             summary.csv                          one row per (model, lr, loss) run so far
-             leaderboard.txt                      same rows, ranked by val Dice (selection metric)
-
-Quick smoke test:  EPOCHS=1 python loss_ablation.py
-"""
 import os
 import csv
 
@@ -74,17 +13,14 @@ from seg_datasets import DRIVE, PH2, build_loaders
 from models import EncDecCNN, UNet, UNetConvT, dice_score, evaluate
 
 import matplotlib
-matplotlib.use("Agg")                       # cluster has no display -> save plots to file
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# ---------------------------------------------------------------------------
-# Visible paths - everything this script reads/writes lives under these.
-# ---------------------------------------------------------------------------
 PROJECT_DIR = os.path.dirname("/zhome/2b/7/233718/idlcv/project_3/image_segmentation_project_3")
 ABLATION_DIR = os.path.join(PROJECT_DIR, "loss_ablation")
-MODELS_DIR  = os.path.join(ABLATION_DIR, "models")   # best_<Model>_<Loss>.pt checkpoints
-FIGURES_DIR = os.path.join(ABLATION_DIR, "figures")  # curves + qualitative predictions
-METRICS_DIR = os.path.join(ABLATION_DIR, "metrics")  # per-run metrics.txt + summary.csv
+MODELS_DIR  = os.path.join(ABLATION_DIR, "models")
+FIGURES_DIR = os.path.join(ABLATION_DIR, "figures")
+METRICS_DIR = os.path.join(ABLATION_DIR, "metrics")
 for _dir in (MODELS_DIR, FIGURES_DIR, METRICS_DIR):
     os.makedirs(_dir, exist_ok=True)
 
@@ -102,30 +38,21 @@ print("Running on:", device)
 NUM_EPOCHS = int(os.environ.get("EPOCHS", 50))
 print("Epochs:", NUM_EPOCHS)
 
-DATASET = "PH2"      # one of: "DRIVE", "PH2" - which dataset BEST_CONFIGS runs against this invocation
+DATASET = "PH2"
 if DATASET == "DRIVE":
     DATASET_CLS, DATASET_IDS_FN = DRIVE, DRIVE.list_ids
-    SIZE = 576        # near-native DRIVE resolution - see module docstring
-    BATCH_SIZE = 2    # drop to 1 if this OOMs at 576x576
+    SIZE = 576
+    BATCH_SIZE = 2
 elif DATASET == "PH2":
     DATASET_CLS, DATASET_IDS_FN = PH2, PH2.list_cases
-    SIZE = 256        # PH2 lesions are large/smooth - no thin-structure reason to go near-native like DRIVE
-    BATCH_SIZE = 6    # matches EncoderDecoderCNN_aug.py's PH2 batch size
+    SIZE = 256
+    BATCH_SIZE = 6
 else:
     raise ValueError(f"Unknown DATASET: {DATASET!r}")
 
-# ---------------------------------------------------------------------------
-# Optimization / regularization knobs - fixed across every entry in
-# BEST_CONFIGS below (lr varies per-config instead; see BEST_CONFIGS).
-# ---------------------------------------------------------------------------
-WEIGHT_DECAY   = 1e-4    # L2 regularization via the optimizer; best value found so far
-OPTIMIZER_NAME = "adamw"  # try: "adam", "adamw", "sgd" (uses momentum=0.9 below) - best found so far
-GRAD_CLIP_NORM = None    # try: 1.0, 5.0 - set a float to enable torch.nn.utils.clip_grad_norm_
-# Dropout is not wired into EncDecCNN/UNet (models.py). To try it, add
-# nn.Dropout2d(p=...) inside conv_block() / after an encoder ReLU and rerun.
-# Augmentation strength (flip/rotation/translation/color jitter) is also a
-# natural ablation axis - the settings below just reuse what
-# EncoderDecoderCNN_aug.py already uses, unchanged.
+WEIGHT_DECAY   = 1e-4
+OPTIMIZER_NAME = "adamw"
+GRAD_CLIP_NORM = None
 
 
 def build_optimizer(model, lr):
@@ -138,11 +65,6 @@ def build_optimizer(model, lr):
     raise ValueError(f"Unknown OPTIMIZER_NAME: {OPTIMIZER_NAME}")
 
 
-# ---------------------------------------------------------------------------
-# Data: DATASET (DRIVE or PH2), same augmentation as EncoderDecoderCNN_aug.py
-# for both (not an ablation axis here - kept fixed so the loss function is
-# the only thing that changes between runs).
-# ---------------------------------------------------------------------------
 train_transform = transforms.Compose([
     transforms.ColorJitter(brightness=0.2, contrast=0.2),
 ])
@@ -156,27 +78,17 @@ data_loaders, data_split = build_loaders(DATASET_CLS, DATASET_IDS_FN, size=SIZE,
                                           train_transform=train_transform, joint_transform=joint_transform)
 train_loader, val_loader, test_loader = data_loaders["train"], data_loaders["val"], data_loaders["test"]
 
-# Train split evaluated WITHOUT augmentation, same rationale as EncoderDecoderCNN_aug.py
 data_eval, _ = build_loaders(DATASET_CLS, DATASET_IDS_FN, size=SIZE, batch_size=BATCH_SIZE)
 train_eval_loader = data_eval["train"]
 
 
-# ---------------------------------------------------------------------------
-# Loss functions
-# ---------------------------------------------------------------------------
-FOCAL_ALPHA = 0.75  # weight on the foreground (vessel) class. RetinaNet's default (0.25)
-                     # DOWN-weights foreground, which hurts on an already-rare class like
-                     # this one - try 0.5 / 0.75 / 0.9 (higher = more weight on foreground).
-FOCAL_GAMMA = 2.0    # focusing strength - higher values focus more on hard/misclassified
-                     # pixels and less on easy ones already classified correctly; try 1.0, 3.0, 5.0.
+FOCAL_ALPHA = 0.75
+FOCAL_GAMMA = 2.0
 
-POS_WEIGHT_OVERRIDE = None  # set e.g. POS_WEIGHT_OVERRIDE = 5.0 to bypass the computed value below
+POS_WEIGHT_OVERRIDE = None
 
 
 def compute_pos_weight(loader):
-    """Background/foreground pixel ratio over the (unaugmented) train split.
-    Feeds nn.BCEWithLogitsLoss(pos_weight=...) so missing a vessel pixel is
-    penalized `pos_weight` times more than missing a background pixel."""
     fg = bg = 0.0
     for _, target in loader:
         fg += target.sum().item()
@@ -204,21 +116,6 @@ MODELS = {
     "UNetConvT": UNetConvT,
 }
 
-# ---------------------------------------------------------------------------
-# Explicit list of configs to run THIS invocation against DATASET. Edit this
-# list to add/remove configs - each runs once, in order, in this invocation.
-# focal_alpha is only used when loss == "Focal" (ignored otherwise).
-#
-# For DATASET="PH2": PH2 lesions are large/smooth with much milder class
-# imbalance than DRIVE vessels - this set reuses the DRIVE-tuned champions
-# (UNet/UNetConvT + Focal) as-is, PLUS a CrossEntropy entry per architecture,
-# specifically to test whether the DRIVE finding "Focal beats CrossEntropy,
-# and EncDec collapses under CrossEntropy without skip connections" still
-# holds once the severe imbalance that motivated it is mostly gone - per the
-# course baseline, plain CrossEntropy alone reached ~0.92 Dice on PH2 for
-# both EncDec and UNet, so a collapse here would be surprising, not expected.
-# For DATASET="DRIVE": this is the 576x576 best-configs-so-far list.
-# ---------------------------------------------------------------------------
 if DATASET == "PH2":
     BEST_CONFIGS = [
         {"label": "DRIVE champion, reused as-is",       "model": "UNet",      "lr": 3e-3, "loss": "Focal",       "focal_alpha": 0.75},
@@ -245,7 +142,7 @@ def run_experiment(model_name, model_cls, lr, loss_name, loss_fn, num_epochs):
     tag = f"{DATASET}_{model_name}_lr{lr_str}_{loss_name}"
     print(f"\n===== Training {tag} =====", flush=True)
 
-    torch.manual_seed(SEED)  # same init per architecture regardless of lr/loss - isolates their effect
+    torch.manual_seed(SEED)
     model = model_cls().to(device)
     optimizer = build_optimizer(model, lr)
 
@@ -289,8 +186,6 @@ def run_experiment(model_name, model_cls, lr, loss_name, loss_fn, num_epochs):
         print(f"Epoch {epoch + 1}/{num_epochs}  loss train: {train_loss:.4f}"
               f"\tval: {val_loss:.4f}\tval Dice: {val_dice:.4f}", flush=True)
 
-        # Model selection is always by val Dice, never val loss: BCE, focal and
-        # weighted-BCE live on different numeric scales and aren't comparable.
         if val_dice > best_dice:
             best_dice = val_dice
             best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
@@ -299,7 +194,6 @@ def run_experiment(model_name, model_cls, lr, loss_name, loss_fn, num_epochs):
     model.load_state_dict(best_state)
     torch.save(best_state, os.path.join(MODELS_DIR, f"best_{tag}.pt"))
 
-    # --- Figures ---
     fig, ax = plt.subplots()
     ax.plot(train_losses, label="train")
     ax.plot(val_losses, label="val")
@@ -329,7 +223,6 @@ def run_experiment(model_name, model_cls, lr, loss_name, loss_fn, num_epochs):
     fig.savefig(os.path.join(FIGURES_DIR, f"prediction_{tag}.png"), dpi=120)
     plt.close(fig)
 
-    # --- Metrics: 5 metrics x {train, val, test}, best-val-Dice checkpoint ---
     metrics = {split: evaluate(model, loader, device)
                for split, loader in [("train", train_eval_loader), ("val", val_loader), ("test", test_loader)]}
     metrics_path = os.path.join(METRICS_DIR, f"metrics_{tag}.txt")
@@ -347,13 +240,12 @@ def run_experiment(model_name, model_cls, lr, loss_name, loss_fn, num_epochs):
 
 
 def update_summary(result):
-    """Upsert this run's row into summary.csv (keyed on dataset+model+lr+loss) and return all rows so far."""
     rows = []
     if os.path.exists(SUMMARY_PATH):
         with open(SUMMARY_PATH, newline="") as f:
             rows = list(csv.DictReader(f))
     for r in rows:
-        r.setdefault("dataset", "DRIVE")  # old summary.csv files (pre-DATASET) were always DRIVE
+        r.setdefault("dataset", "DRIVE")
         if not r["dataset"]:
             r["dataset"] = "DRIVE"
     rows = [r for r in rows if not (r["dataset"] == result["dataset"] and r["model"] == result["model"]
@@ -375,7 +267,6 @@ def tag_of(row):
 
 
 def plot_comparison(rows):
-    """Bar chart of every run seen so far (across all invocations), ranked by val Dice."""
     rows_sorted = sorted(rows, key=lambda r: float(r["best_val_dice"]), reverse=True)
     tags = [tag_of(r) for r in rows_sorted]
     val_vals = [float(r["best_val_dice"]) for r in rows_sorted]
@@ -397,8 +288,6 @@ def plot_comparison(rows):
 
 
 def print_and_save_leaderboard(rows):
-    """Rank every run seen so far by val Dice (the selection metric) - never by test Dice,
-    or picking the 'best' config would amount to tuning on the test set."""
     rows_sorted = sorted(rows, key=lambda r: float(r["best_val_dice"]), reverse=True)
     header = f"{'rank':<5}{'config':<38}{'val_dice':<10}{'test_dice':<10}"
     lines = [header, "-" * len(header)]

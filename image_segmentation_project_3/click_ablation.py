@@ -12,12 +12,9 @@ from seg_datasets import PH2, PH2_Annotated, build_loaders
 from models import EncDecCNN, UNet, dice_score, evaluate
 
 import matplotlib
-matplotlib.use("Agg")                       # cluster has no display -> save plots to file
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# ---------------------------------------------------------------------------
-# Visible paths - everything this script reads/writes lives under these.
-# ---------------------------------------------------------------------------
 PROJECT_DIR = os.path.dirname("/zhome/2b/7/233718/idlcv/project_3/image_segmentation_project_3")
 ABLATION_DIR = os.path.join(PROJECT_DIR, "click_ablation")
 MODELS_DIR  = os.path.join(ABLATION_DIR, "models")
@@ -37,24 +34,17 @@ if torch.backends.mps.is_available():
     device = 'mps'
 print("Running on:", device)
 
-NUM_EPOCHS = int(os.environ.get("EPOCHS", 50))   # 50 matches the winning PH2 run in loss_ablation
+NUM_EPOCHS = int(os.environ.get("EPOCHS", 50))
 print("Epochs:", NUM_EPOCHS)
 
-SIZE = 256           # PH2, same as every Part 1 PH2 run
-BATCH_SIZE = 6        # matches EncoderDecoderCNN_aug.py / loss_ablation.py's PH2 batch size
+SIZE = 256
+BATCH_SIZE = 6
 
-# ---------------------------------------------------------------------------
-# Fixed "best known" hyperparameters, from loss_ablation/finetuning/ph/.
-# Not swept here - the two axes under test are CLICK_COUNTS and
-# SAMPLING_STRATEGIES below.
-# ---------------------------------------------------------------------------
 LEARNING_RATE  = 3e-3
 WEIGHT_DECAY   = 1e-4
 OPTIMIZER_NAME = "adamw"
 GRAD_CLIP_NORM = None
 
-# Reference numbers from the full-supervision PH2 runs (loss_ablation/finetuning/ph/summary.csv) -
-# NOT re-run here, just printed for comparison.
 FULL_SUPERVISION_VAL_DICE = {"EncDec": 0.9171, "UNet": 0.9169}
 
 
@@ -66,10 +56,6 @@ def build_optimizer(model):
     raise ValueError(f"Unknown OPTIMIZER_NAME: {OPTIMIZER_NAME}")
 
 
-# ---------------------------------------------------------------------------
-# Data augmentation - identical to EncoderDecoderCNN_aug.py / loss_ablation.py's
-# PH2 setup (not an ablation axis here).
-# ---------------------------------------------------------------------------
 train_transform = transforms.Compose([
     transforms.ColorJitter(brightness=0.2, contrast=0.2),
 ])
@@ -79,25 +65,17 @@ joint_transform = v2.Compose([
     v2.RandomAffine(degrees=25, translate=(0.1, 0.1)),
 ])
 
-# Train split evaluated against the real masks (not clicks) for diagnostics -
-# same rationale as EncoderDecoderCNN_aug.py's ph2_eval.
 ph2_eval, _ = build_loaders(PH2, PH2.list_cases, size=SIZE, batch_size=BATCH_SIZE)
 train_eval_loader = ph2_eval["train"]
 
-loss_fn = nn.BCEWithLogitsLoss()   # plain CrossEntropy - the winning PH2 loss, no reweighting
+loss_fn = nn.BCEWithLogitsLoss()
 
 MODELS = {
     "EncDec": EncDecCNN,
     "UNet": UNet,
 }
 
-# ---------------------------------------------------------------------------
-# The two axes under test (Exercise 2.4, task 4). CLICK_COUNTS was chosen
-# from scan_click_feasibility.py's real-data scan: the smallest eroded
-# ("biased" mode) lesion has 423 candidate pixels, so every value here is
-# safely feasible for every PH2 training image under both sampling modes.
-# ---------------------------------------------------------------------------
-CLICK_COUNTS = [1, 3, 10, 25, 50, 100]          # pos_clicks = neg_clicks = N
+CLICK_COUNTS = [1, 3, 10, 25, 50, 100]
 SAMPLING_STRATEGIES = ["random", "biased"]
 
 SUMMARY_PATH = os.path.join(METRICS_DIR, "summary.csv")
@@ -115,10 +93,10 @@ def run_experiment(model_name, model_cls, strategy, n_clicks, num_epochs):
         train_transform=train_transform, joint_transform=joint_transform,
         pos_clicks=n_clicks, neg_clicks=n_clicks, sampling_strategy=strategy)
     train_loader = ph2_annotated_loaders["train"]
-    val_loader = ph2_annotated_loaders["val"]     # real full masks (handled by build_loaders)
-    test_loader = ph2_annotated_loaders["test"]   # real full masks
+    val_loader = ph2_annotated_loaders["val"]
+    test_loader = ph2_annotated_loaders["test"]
 
-    torch.manual_seed(SEED)  # same init per architecture regardless of strategy/N - isolates their effect
+    torch.manual_seed(SEED)
     model = model_cls().to(device)
     optimizer = build_optimizer(model)
 
@@ -136,8 +114,8 @@ def run_experiment(model_name, model_cls, strategy, n_clicks, num_epochs):
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
             output = model(data)
-            labeled = target != -1               # the point-level supervision loss: only clicked
-            if not labeled.any():                # pixels contribute gradient (Exercise 2.4, task 2)
+            labeled = target != -1
+            if not labeled.any():
                 continue
             loss = loss_fn(output[labeled], target[labeled])
             loss.backward()
@@ -177,7 +155,6 @@ def run_experiment(model_name, model_cls, strategy, n_clicks, num_epochs):
     model.load_state_dict(best_state)
     torch.save(best_state, os.path.join(MODELS_DIR, f"best_{tag}.pt"))
 
-    # --- Figures ---
     fig, ax = plt.subplots()
     ax.plot(train_losses, label="train")
     ax.plot(val_losses, label="val")
@@ -214,7 +191,6 @@ def run_experiment(model_name, model_cls, strategy, n_clicks, num_epochs):
     fig.savefig(os.path.join(FIGURES_DIR, f"prediction_{tag}.png"), dpi=120)
     plt.close(fig)
 
-    # --- Metrics: 5 metrics x {train, val, test}, best-val-Dice checkpoint ---
     metrics = {split: evaluate(model, loader, device)
                for split, loader in [("train", train_eval_loader), ("val", val_loader), ("test", test_loader)]}
     metrics_path = os.path.join(METRICS_DIR, f"metrics_{tag}.txt")
@@ -233,7 +209,6 @@ def run_experiment(model_name, model_cls, strategy, n_clicks, num_epochs):
 
 
 def update_summary(result):
-    """Upsert this run's row into summary.csv (keyed on model+strategy+n_clicks) and return all rows so far."""
     rows = []
     if os.path.exists(SUMMARY_PATH):
         with open(SUMMARY_PATH, newline="") as f:
@@ -257,7 +232,6 @@ def tag_of(row):
 
 
 def plot_comparison(rows):
-    """Val Dice vs. N, one line per (model, strategy), with full-supervision reference lines."""
     fig, ax = plt.subplots(figsize=(7, 4.5))
     for model_name in MODELS:
         for strategy in SAMPLING_STRATEGIES:
@@ -279,7 +253,6 @@ def plot_comparison(rows):
 
 
 def print_and_save_leaderboard(rows):
-    """Rank every run seen so far by val Dice - never by test Dice."""
     rows_sorted = sorted(rows, key=lambda r: float(r["best_val_dice"]), reverse=True)
     header = f"{'rank':<5}{'config':<30}{'val_dice':<10}{'test_dice':<10}"
     lines = [header, "-" * len(header)]

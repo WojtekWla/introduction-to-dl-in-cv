@@ -1,17 +1,3 @@
-"""
-Scan every PH2 training-set lesion mask to find the smallest usable click
-budget, so the click-count ablation (Exercise 2.4, task 4) doesn't pick an
-N that's infeasible for the smallest lesion.
-
-For each mask (binarized at the same 256x256 used everywhere else), reports:
-  - raw lesion pixel count        -> caps pos_clicks for "random" sampling
-  - raw background pixel count    -> caps neg_clicks (essentially never binding)
-  - eroded lesion pixel count     -> caps pos_clicks for "biased" sampling
-                                      (erosion matches _annotated_points exactly:
-                                      kernel_size=21, stride=1, padding=10)
-
-Usage:  python scan_click_feasibility.py
-"""
 import os
 import torch
 import torch.nn.functional as F
@@ -47,7 +33,7 @@ if __name__ == "__main__":
         eroded = eroded_count(mask)
         rows.append((case, pos, neg, eroded))
 
-    rows.sort(key=lambda r: r[3])  # sort by eroded count ascending - the binding constraint
+    rows.sort(key=lambda r: r[3])
 
     print(f"\n{'case':10s}{'lesion_px':>12s}{'bg_px':>12s}{'eroded_px':>12s}")
     for case, pos, neg, eroded in rows:
