@@ -19,19 +19,26 @@ class CNN3D(nn.Module):
             nn.Conv3d(in_channels=3, out_channels=16, kernel_size=3, padding=1),
             nn.BatchNorm3d(num_features=16), nn.ReLU(),
             nn.MaxPool3d(kernel_size=(1, 2, 2)),
+            nn.Dropout3d(0.2),
             nn.Conv3d(in_channels=16, out_channels=32, kernel_size=3, padding=1),
             nn.BatchNorm3d(num_features=32), nn.ReLU(),
             nn.MaxPool3d(kernel_size=(1, 2, 2)),
+            nn.Dropout3d(0.2),
             nn.Conv3d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
             nn.BatchNorm3d(num_features=64), nn.ReLU(),
             nn.MaxPool3d(kernel_size=(2, 2, 2)),
-            nn.AdaptiveAvgPool3d((2, 4, 4))
+            nn.Dropout3d(0.2),
+            nn.Conv3d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
+            nn.BatchNorm3d(num_features=128), nn.ReLU(),
+            nn.MaxPool3d(kernel_size=(2, 2, 2)),
+            nn.Dropout3d(0.2),
+            nn.AdaptiveAvgPool3d((2, 2, 2))
         )
 
         self.linear = nn.Sequential(
             nn.Flatten(),
             nn.Dropout(0.5),
-            nn.Linear(64 * 2 * 4 * 4, num_classes)
+            nn.Linear(128 * 2 * 2 * 2, num_classes)
         )
 
     def forward(self, x):
@@ -117,31 +124,36 @@ if __name__ == "__main__":
     torch.manual_seed(0)
     np.random.seed(0)
 
-    root_dir = "/dtu/datasets1/02516/ufc10"
+    root_dir = "/dtu/datasets1/02516/ucf101_noleakage"
 
     train_tf = transforms.Compose([
+            transforms.RandomResizedCrop((112, 112), scale=(0.8, 1.0)),
             transforms.RandomHorizontalFlip(),
             transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
             transforms.ToTensor(),
     ])
+    eval_tf = transforms.Compose([
+            transforms.Resize((112, 112)),
+            transforms.ToTensor(),
+    ])
 
     test_loader = DataLoader(
-        FrameVideoDataset(root_dir=root_dir, split='test', stack_frames=True),
-        batch_size=batch_size, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True
+        FrameVideoDataset(root_dir=root_dir, split='test', stack_frames=True, transform=eval_tf),
+        batch_size=batch_size, shuffle=False, num_workers=8, persistent_workers=True, pin_memory=True
     )
-    
+
     train_loader = DataLoader(
         FrameVideoDataset(root_dir=root_dir, split='train', transform=train_tf),
-        batch_size=batch_size, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True
+        batch_size=batch_size, shuffle=True, num_workers=8, persistent_workers=True, pin_memory=True
     )
 
     validate_loader = DataLoader(
-        FrameVideoDataset(root_dir=root_dir, split='val', stack_frames=True),
-        batch_size=batch_size, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True
+        FrameVideoDataset(root_dir=root_dir, split='val', stack_frames=True, transform=eval_tf),
+        batch_size=batch_size, shuffle=False, num_workers=8, persistent_workers=True, pin_memory=True
     )
 
     model = CNN3D(num_classes=10).to(device)
-    model, hist_scratch = fit(model, train_loader, validate_loader, 0.001, num_epochs=50)
+    model, hist_scratch = fit(model, train_loader, validate_loader, 0.001, num_epochs=100, weight_decay=5e-4)
 
     test_loss, test_acc = evaluate_video(model, test_loader, nn.CrossEntropyLoss(label_smoothing=0.1))
     print(f'test loss {test_loss:.3f} | test video acc {test_acc:.3f}')

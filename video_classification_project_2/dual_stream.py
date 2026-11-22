@@ -21,19 +21,22 @@ class FlowStream(nn.Module):
             nn.Conv2d(in_channels=2 * n_flows, out_channels=32, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_features=32), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(0.3),
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_features=64), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(0.3),
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_features=128), nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),
-            nn.AdaptiveAvgPool2d((4, 4)),
+            nn.Dropout2d(0.3),
+            nn.AdaptiveAvgPool2d((2, 2)),
         )
 
         self.linear = nn.Sequential(
             nn.Flatten(),
-            nn.Dropout(0.5),
-            nn.Linear(128 * 4 * 4, num_classes)
+            nn.Dropout(0.6),
+            nn.Linear(128 * 2 * 2, num_classes)
         )
 
     def forward(self, x):
@@ -54,9 +57,10 @@ class DualStream(nn.Module):
 
 
 class DualStreamDataset(Dataset):
-    def __init__(self, root_dir, split='train', transform=None, n_flows=9):
+    def __init__(self, root_dir, split='train', transform=None, n_flows=9, augment_flow=False):
         self.rgb_dataset = FrameVideoDataset(root_dir=root_dir, split=split, transform=transform, stack_frames=True)
         self.flow_dataset = FlowVideoDataset(root_dir=root_dir, split=split, n_flows=n_flows)
+        self.augment_flow = augment_flow
 
     def __len__(self):
         return len(self.rgb_dataset)
@@ -64,6 +68,14 @@ class DualStreamDataset(Dataset):
     def __getitem__(self, idx):
         rgb, label = self.rgb_dataset[idx]
         flow, _ = self.flow_dataset[idx]
+
+        if self.augment_flow:
+            if torch.rand(1).item() < 0.5:
+                flow = flow.flip(-1)           # mirror width
+                flow = flow.clone()
+                flow[0::2] = -flow[0::2]       # negate the u (horizontal) component of each pair
+            flow = flow + torch.randn_like(flow) * 1.0
+
         return rgb, flow, label
 
 
@@ -162,7 +174,7 @@ if __name__ == "__main__":
     )
 
     train_loader = DataLoader(
-        DualStreamDataset(root_dir=root_dir, split='train', transform=train_tf),
+        DualStreamDataset(root_dir=root_dir, split='train', transform=train_tf, augment_flow=True),
         batch_size=batch_size, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True
     )
 
@@ -172,7 +184,7 @@ if __name__ == "__main__":
     )
 
     model = DualStream(num_classes=10).to(device)
-    model, hist_scratch = fit(model, train_loader, validate_loader, 0.001, num_epochs=50)
+    model, hist_scratch = fit(model, train_loader, validate_loader, 0.001, num_epochs=50, weight_decay=5e-4)
 
     test_loss, test_acc = evaluate_video(model, test_loader, nn.CrossEntropyLoss(label_smoothing=0.1))
     print(f'test loss {test_loss:.3f} | test video acc {test_acc:.3f}')
