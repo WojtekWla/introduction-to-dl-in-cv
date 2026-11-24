@@ -2,8 +2,21 @@
 
 Dataset lives on the DTU HPC cluster at `/dtu/datasets1/02516/potholes` (SSH
 host alias `gbar`), with `images/potholesNNN.png` and
-`annotations/potholesNNN.xml` (Pascal VOC-style boxes). There's no
-predefined train/val/test split — sampling is done locally.
+`annotations/potholesNNN.xml` (Pascal VOC-style boxes): 665 images, 1740
+boxes, one class (`pothole`).
+
+## Train/val/test split
+
+The dataset has no `splits.json` (the task PDF mentions one, but it isn't on
+the cluster), so `splits.json` in this folder is our own fixed 70/10/20 split
+by image (seed 0: 466 train, 66 val, 133 test). Use it for everything: tune on
+train/val only, report AP on test only. It was made with:
+
+```
+python make_splits.py            # on the HPC; or --data-root DIR elsewhere
+```
+
+Test: `uv run --with pytest pytest object_detection_project_4/test_make_splits.py`
 
 ## Usage
 
