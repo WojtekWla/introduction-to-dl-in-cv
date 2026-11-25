@@ -83,5 +83,17 @@ larger). Run `proposals.py` first.
 python evaluate_proposals.py [--proposals-dir DIR]
 ```
 
+### 4. `recall_curves.py` + `plot_recall.py`
+
+Recall vs. N (steps of 10, up to 3000) for several proposal sets at once, to
+find the elbow. Compute on the HPC (numpy only), plot locally (matplotlib):
+
+```
+python recall_curves.py --out recall_curves.csv fast_300=../data/potholes/proposals quality_full=../data/potholes/proposals_quality_full
+python plot_recall.py figures/recall_curves.csv figures/recall_vs_n.png
+```
+
+Current result for all four settings: `figures/recall_vs_n.png`.
+
 `download.py` (copy a random sample via `scp`, host alias `gbar`) predates the
 `DATA_ROOT` setup and is no longer needed.
