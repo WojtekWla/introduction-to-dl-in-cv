@@ -26,10 +26,9 @@ from PIL import Image
 from torch.utils.data import Dataset, WeightedRandomSampler
 from torchvision import transforms
 
-from evaluate_proposals import ANNOTATIONS_DIR, SPLITS_FILE
-from groundtruth import parse_boxes
-from label_proposals import LABELS_DIR, NEG_IOU, POS_IOU
-from proposals import IMAGES_DIR, N_PROPOSALS
+from annotations import parse_boxes
+from config import (ANNOTATIONS_DIR, IMAGES_DIR, LABELS_DIR, N_PROPOSALS, NEG_IOU,
+                    POS_IOU, SPLITS_FILE)
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)

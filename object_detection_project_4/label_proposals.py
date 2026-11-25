@@ -11,13 +11,10 @@ import json
 
 import numpy as np
 
-from evaluate_proposals import compute_IoU, ANNOTATIONS_DIR, SPLITS_FILE
-from proposals import PROPOSALS_DIR, N_PROPOSALS, LOCAL_DIR
-from groundtruth import parse_boxes
-
-LABELS_DIR = LOCAL_DIR / "labels"
-POS_IOU = 0.5  # >= this: pothole
-NEG_IOU = 0.3  # <  this: background; in between: ignored
+from annotations import parse_boxes
+from config import (ANNOTATIONS_DIR, LABELS_DIR, N_PROPOSALS, NEG_IOU, POS_IOU,
+                    PROPOSALS_DIR, SPLITS_FILE)
+from evaluate_proposals import compute_IoU
 
 
 def label_image(stem: str) -> np.ndarray:

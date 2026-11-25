@@ -1,21 +1,15 @@
 import argparse
-import cv2
 from pathlib import Path
+
+import cv2
 import numpy as np
-import os
 
-LOCAL_DIR = Path(__file__).resolve().parents[1] / 'data' / 'potholes'
+from config import IMAGES_DIR, PROPOSALS_DIR
 
-DEFAULT_DATA_ROOT = Path(os.environ.get("DATA_ROOT", "/dtu/datasets1/02516/potholes"))
-
-IMAGES_DIR = DEFAULT_DATA_ROOT / 'images'
-
-# Team choice (recall_vs_n.png): Quality mode at full resolution, first 1000
-# proposals per image (recall 0.906 on train). Shrinking to 300 px missed small potholes.
+# Team choice (figures/recall_vs_n.png): Quality mode at full resolution.
+# Shrinking to 300 px missed small potholes.
 DEFAULT_MODE = "quality"
 TARGET_MAX_DIM = 0  # 0 = no resize
-PROPOSALS_DIR = LOCAL_DIR / 'proposals_quality_full'
-N_PROPOSALS = 1000
 
 def resize_image(frame, max_dim=TARGET_MAX_DIM):
     if max_dim <= 0:

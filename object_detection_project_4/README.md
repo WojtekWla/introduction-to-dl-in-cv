@@ -8,8 +8,15 @@ Outputs go to `../data/potholes/` (on the HPC: `~/idlcv/data/potholes/`).
 
 ## Setup on the HPC (once)
 
-Needs `opencv-contrib-python` in your venv (`pip install opencv-contrib-python`).
-Copy this folder to the HPC, then from inside it:
+Copy this folder to the HPC (e.g. `~/idlcv/project4`). The dataset needs the
+`labels` folder in `../data/potholes/` next to it. Easiest: get `labels.tgz`
+from the team and unpack it:
+
+```
+mkdir -p ~/idlcv/data/potholes && tar xzf labels.tgz -C ~/idlcv/data/potholes
+```
+
+Or make it yourself (needs `pip install opencv-contrib-python`):
 
 ```
 mkdir -p logs
@@ -17,7 +24,7 @@ bsub < jobs/proposals.sh        # Selective Search for all images, ~40 min
 python label_proposals.py       # after the job finished, a few seconds
 ```
 
-Check: the job log ends with recall `0.906` at N=1000. Then your proposals match ours.
+Check: `python dataset.py` prints `train: 466 images, 430503 crops, {'pothole': 13530, ...}`.
 
 ## Using the data (4.2 / 4.3)
 
@@ -55,8 +62,10 @@ Options:
 | File | What it does |
 |---|---|
 | `dataset.py` | Dataset, sampler and transforms for training and testing |
+| `config.py` | Shared paths and settings (N, IoU thresholds) |
 | `splits.json` | Train/val/test image lists |
-| `proposals.py` | Selective Search, saves boxes per image (shared settings at the top) |
+| `annotations.py` | Reads the XML boxes |
+| `proposals.py` | Selective Search, saves boxes per image (needs OpenCV) |
 | `label_proposals.py` | Best IoU of every proposal with a pothole (task 4.1.4) |
 | `evaluate_proposals.py` | Proposal recall for several N (task 4.1.3) |
 | `recall_curves.py`, `plot_recall.py` | Recall-vs-N plot |

@@ -1,29 +1,11 @@
-import xml.etree.ElementTree as ET
-from pathlib import Path
-import os
 import cv2
 
-DEFAULT_DATA_ROOT = Path(os.environ.get("DATA_ROOT", "/dtu/datasets1/02516/potholes"))
-IMAGES_DIR = DEFAULT_DATA_ROOT / 'images'
-ANNOTATIONS_DIR = DEFAULT_DATA_ROOT / "annotations"
+from annotations import parse_boxes
+from config import ANNOTATIONS_DIR, IMAGES_DIR
 
 LEFT_KEYS = {ord("a"), 65361, 63234, 2424832}
 RIGHT_KEYS = {ord("d"), 65363, 63235, 2555904}
 QUIT_KEYS = {27, ord("q")}
-
-
-def parse_boxes(xml_path):
-    root = ET.parse(xml_path).getroot()
-    boxes = []
-    for obj in root.findall("object"):
-        name = obj.find("name").text
-        bndbox = obj.find("bndbox")
-        xmin = int(bndbox.find("xmin").text)
-        ymin = int(bndbox.find("ymin").text)
-        xmax = int(bndbox.find("xmax").text)
-        ymax = int(bndbox.find("ymax").text)
-        boxes.append((name, xmin, ymin, xmax, ymax))
-    return boxes
 
 
 def build_frame(image_path):
@@ -43,7 +25,7 @@ def build_frame(image_path):
 def main():
     image_paths = sorted(IMAGES_DIR.glob("potholes*.png"))
     if not image_paths:
-        print(f"No images found in {IMAGES_DIR}. Run download.py first.")
+        print(f"No images found in {IMAGES_DIR}. Set DATA_ROOT to a folder with images/ and annotations/.")
         return
 
     window = "Potholes ground truth"

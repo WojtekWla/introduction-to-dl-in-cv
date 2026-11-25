@@ -15,8 +15,9 @@ from pathlib import Path
 
 import numpy as np
 
-from evaluate_proposals import ANNOTATIONS_DIR, IOU_THRESHOLD, SPLITS_FILE, compute_IoU
-from groundtruth import parse_boxes
+from annotations import parse_boxes
+from config import ANNOTATIONS_DIR, SPLITS_FILE
+from evaluate_proposals import IOU_THRESHOLD, compute_IoU
 
 MAX_N = 3000
 STEP = 10

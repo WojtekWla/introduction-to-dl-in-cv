@@ -1,19 +1,11 @@
 import argparse
-import cv2
-import numpy as np
-from groundtruth import parse_boxes
-from pathlib import Path
-import os
 import json
+from pathlib import Path
 
-from proposals import PROPOSALS_DIR
+import numpy as np
 
-DEFAULT_DATA_ROOT = Path(os.environ.get("DATA_ROOT", "/dtu/datasets1/02516/potholes"))
-
-IMAGES_DIR = DEFAULT_DATA_ROOT / 'images'
-ANNOTATIONS_DIR = DEFAULT_DATA_ROOT / "annotations"
-
-SPLITS_FILE = Path(__file__).resolve().parent / "splits.json"
+from annotations import parse_boxes
+from config import ANNOTATIONS_DIR, IMAGES_DIR, PROPOSALS_DIR, SPLITS_FILE
 
 IOU_THRESHOLD = 0.5
 SMALL_BOX_SIDE = 20
