@@ -55,18 +55,29 @@ by their longest side before running SS for speed (never upscaled), and
 proposal boxes are rescaled back before saving.
 
 ```
-python proposals.py
+python proposals.py                                   # fast mode, 300px, -> ../data/potholes/proposals
+python proposals.py --mode quality --max-dim 2000 --out-dir ../data/potholes/proposals_quality_full
 ```
+
+On the HPC, run it as a batch job instead (see `jobs/proposals.sh` for how to
+pass the settings).
+
+**Proposal order is random.** OpenCV's Selective Search returns the same set
+of boxes every run but in a different order (`cv2.setRNGSeed` doesn't change
+that). So "the first N proposals" differs between runs: generate the proposals
+once and have everyone use the same saved files.
 
 ### 3. `evaluate_proposals.py`
 
 Evaluates how many proposals are needed: for each GT box of the **train**
 split, checks whether any of the first N proposals overlaps it with
 IoU >= 0.5, then reports recall over all train GT boxes for a range of N (plus
-"all" = every proposal an image has, uncapped). Run `proposals.py` first.
+"all" = every proposal an image has, uncapped). Also prints the number of
+proposals per image and the recall split by GT box size (min side < 20 px vs
+larger). Run `proposals.py` first.
 
 ```
-python evaluate_proposals.py
+python evaluate_proposals.py [--proposals-dir DIR]
 ```
 
 `download.py` (copy a random sample via `scp`, host alias `gbar`) predates the

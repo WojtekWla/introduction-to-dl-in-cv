@@ -1,3 +1,4 @@
+import argparse
 import cv2
 from pathlib import Path
 import numpy as np
@@ -12,17 +13,20 @@ PROPOSALS_DIR = LOCAL_DIR / 'proposals'
 
 TARGET_MAX_DIM = 300
 
-def resize_image(frame):
+def resize_image(frame, max_dim=TARGET_MAX_DIM):
     orig_height, orig_width = frame.shape[:2]
-    scale = min(1.0, TARGET_MAX_DIM / max(orig_width, orig_height))
+    scale = min(1.0, max_dim / max(orig_width, orig_height))
     if scale == 1.0:
         return frame, scale
     new_width, new_height = round(orig_width * scale), round(orig_height * scale)
     return cv2.resize(frame, (new_width, new_height)), scale
 
-def extract_proposals_for_frame(frame, selective_search_processor):
+def extract_proposals_for_frame(frame, selective_search_processor, mode="fast"):
     selective_search_processor.setBaseImage(frame)
-    selective_search_processor.switchToSelectiveSearchFast()
+    if mode == "quality":
+        selective_search_processor.switchToSelectiveSearchQuality()
+    else:
+        selective_search_processor.switchToSelectiveSearchFast()
     return selective_search_processor.process()
 
 def rescale_to_original(rectangles, scale):
@@ -36,27 +40,31 @@ def rescale_to_original(rectangles, scale):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Selective Search proposals for every image.")
+    parser.add_argument("--max-dim", type=int, default=TARGET_MAX_DIM,
+                        help="resize longest side to this before SS (never upscales)")
+    parser.add_argument("--mode", choices=["fast", "quality"], default="fast")
+    parser.add_argument("--out-dir", type=Path, default=PROPOSALS_DIR)
+    args = parser.parse_args()
+
     images_paths = sorted(IMAGES_DIR.glob('potholes*.png'))
     if not images_paths:
         print("Images could not be found")
         return
 
-    PROPOSALS_DIR.mkdir(parents=True, exist_ok=True)
+    args.out_dir.mkdir(parents=True, exist_ok=True)
 
     ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
 
     for image_path in images_paths:
         frame = cv2.imread(image_path)
 
-        frame, scale = resize_image(frame)
-        rectangles = extract_proposals_for_frame(frame, ss)
+        frame, scale = resize_image(frame, args.max_dim)
+        rectangles = extract_proposals_for_frame(frame, ss, args.mode)
         rectangles = rescale_to_original(rectangles, scale)
 
-        np.save(f'{PROPOSALS_DIR}/{image_path.stem}.npy', rectangles)
-        
+        np.save(args.out_dir / f'{image_path.stem}.npy', rectangles)
 
-    
-    
 
 if __name__ == "__main__":
     main()
