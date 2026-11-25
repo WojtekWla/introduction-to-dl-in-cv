@@ -112,5 +112,29 @@ ignored. Prints the class balance on train (first 1000 proposals: 3.0% pothole,
 python label_proposals.py
 ```
 
+### 6. `dataset.py`: the shared dataloader (task 4.2.2)
+
+`PotholeProposals(split, transform, ...)` returns one proposal crop per item:
+`(crop, label, box, image_idx)`; `dataset.image_names[image_idx]` gives the
+image. Ignored-IoU proposals are dropped unless `keep_all=True` (use that for
+4.3). `balanced_sampler` fixes the ~3% pothole imbalance (default 25% potholes
+per batch). `make_transform(train, size, imagenet_norm)` builds the resize /
+flip / normalize pipeline.
+
+```python
+from torch.utils.data import DataLoader
+from dataset import PotholeProposals, balanced_sampler, make_transform
+
+train = PotholeProposals("train", make_transform(train=True))
+train_loader = DataLoader(train, batch_size=64, sampler=balanced_sampler(train), num_workers=4)
+val = PotholeProposals("val", make_transform(train=False))
+test = PotholeProposals("test", make_transform(train=False), keep_all=True)   # 4.3
+```
+
+Crops per split (first 1000 proposals, ignored band dropped): train 430,503
+(13,530 pothole), val 62,018 (1,950), test 124,576 (3,937). `python dataset.py`
+prints this and saves `../data/potholes/example_crops.png` for a visual check.
+Tests: `uv run --with pytest pytest object_detection_project_4/test_dataset.py`.
+
 `download.py` (copy a random sample via `scp`, host alias `gbar`) predates the
 `DATA_ROOT` setup and is no longer needed.
