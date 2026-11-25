@@ -100,5 +100,17 @@ python plot_recall.py figures/recall_curves.csv figures/recall_vs_n.png
 
 Current result for all four settings: `figures/recall_vs_n.png`.
 
+### 5. `label_proposals.py` (task 4.1.4)
+
+For every image, saves `../data/potholes/labels/<stem>.npz` with `boxes` (all
+proposals) and `max_iou` (each proposal's best IoU with any GT box). Thresholds
+are applied in the dataloader: IoU >= 0.5 pothole, < 0.3 background, in between
+ignored. Prints the class balance on train (first 1000 proposals: 3.0% pothole,
+3.3% ignored, 93.6% background).
+
+```
+python label_proposals.py
+```
+
 `download.py` (copy a random sample via `scp`, host alias `gbar`) predates the
 `DATA_ROOT` setup and is no longer needed.
