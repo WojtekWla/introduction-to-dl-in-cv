@@ -3,8 +3,8 @@
 # CPU only, so it runs on the general "hpc" queue instead of the course GPU queue.
 #
 # Submit from the project folder on the HPC (mkdir -p logs first):
-#   bsub < jobs/proposals.sh                                   # baseline: fast, 300px -> data/potholes/proposals
-#   bsub -env "all,MODE=quality,MAX_DIM=2000,OUT_NAME=proposals_quality_full" < jobs/proposals.sh
+#   bsub < jobs/proposals.sh                    # team default: quality, full size -> data/potholes/proposals_quality_full
+#   bsub -env "all,MODE=fast,MAX_DIM=300,OUT_NAME=proposals" < jobs/proposals.sh   # old baseline, for comparison
 # Pass settings with -env: on this cluster, variables set in front of bsub do NOT reach the job.
 
 #BSUB -q hpc
@@ -16,9 +16,9 @@
 #BSUB -o logs/proposals_%J.out
 #BSUB -e logs/proposals_%J.err
 
-MODE="${MODE:-fast}"
-MAX_DIM="${MAX_DIM:-300}"
-OUT_DIR="$HOME/idlcv/data/potholes/${OUT_NAME:-proposals}"
+MODE="${MODE:-quality}"
+MAX_DIM="${MAX_DIM:-0}"
+OUT_DIR="$HOME/idlcv/data/potholes/${OUT_NAME:-proposals_quality_full}"
 
 module load python3/3.11.13
 source "$HOME/.venvs/idlcv-p2/bin/activate"

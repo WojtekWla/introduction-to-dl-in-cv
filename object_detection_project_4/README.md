@@ -55,9 +55,14 @@ by their longest side before running SS for speed (never upscaled), and
 proposal boxes are rescaled back before saving.
 
 ```
-python proposals.py                                   # fast mode, 300px, -> ../data/potholes/proposals
-python proposals.py --mode quality --max-dim 2000 --out-dir ../data/potholes/proposals_quality_full
+python proposals.py                                   # team default: quality, full size -> ../data/potholes/proposals_quality_full
+python proposals.py --mode fast --max-dim 300 --out-dir ../data/potholes/proposals   # old baseline
 ```
+
+**Team choice:** Quality mode at full resolution, and the first
+`N_PROPOSALS = 1000` proposals per image (recall 0.906 on train, see
+`figures/recall_vs_n.png`). Both are defined at the top of `proposals.py`;
+import them from there instead of hard-coding.
 
 On the HPC, run it as a batch job instead (see `jobs/proposals.sh` for how to
 pass the settings).

@@ -6,13 +6,11 @@ from pathlib import Path
 import os
 import json
 
-
-LOCAL_DIR = Path(__file__).resolve().parents[1] / "data" / "potholes"
+from proposals import PROPOSALS_DIR
 
 DEFAULT_DATA_ROOT = Path(os.environ.get("DATA_ROOT", "/dtu/datasets1/02516/potholes"))
 
 IMAGES_DIR = DEFAULT_DATA_ROOT / 'images'
-PROPOSALS_DIR = LOCAL_DIR / 'proposals'
 ANNOTATIONS_DIR = DEFAULT_DATA_ROOT / "annotations"
 
 SPLITS_FILE = Path(__file__).resolve().parent / "splits.json"
