@@ -4,8 +4,8 @@
 #
 # Submit from the project folder on the HPC (mkdir -p logs first):
 #   bsub < jobs/proposals.sh                                   # baseline: fast, 300px -> data/potholes/proposals
-#   MODE=quality MAX_DIM=2000 OUT_NAME=proposals_quality_full bsub < jobs/proposals.sh
-# The variables are copied into the job because bsub passes on the submitting shell's environment.
+#   bsub -env "all,MODE=quality,MAX_DIM=2000,OUT_NAME=proposals_quality_full" < jobs/proposals.sh
+# Pass settings with -env: on this cluster, variables set in front of bsub do NOT reach the job.
 
 #BSUB -q hpc
 #BSUB -J p4_proposals

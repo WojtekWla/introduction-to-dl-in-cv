@@ -62,10 +62,13 @@ python proposals.py --mode quality --max-dim 2000 --out-dir ../data/potholes/pro
 On the HPC, run it as a batch job instead (see `jobs/proposals.sh` for how to
 pass the settings).
 
-**Proposal order is random.** OpenCV's Selective Search returns the same set
-of boxes every run but in a different order (`cv2.setRNGSeed` doesn't change
-that). So "the first N proposals" differs between runs: generate the proposals
-once and have everyone use the same saved files.
+**Proposal order is partly random.** OpenCV's Selective Search returns the same
+set of boxes every run, but ranks them with a random component
+(`cv2.setRNGSeed` doesn't control it). On the HPC (Linux) a fresh process
+always gives the same order, so a full `proposals.py` run is reproducible; on
+macOS the order changes between runs. Since "the first N proposals" depends on
+the order, generate the proposals once on the HPC and have everyone use those
+saved files.
 
 ### 3. `evaluate_proposals.py`
 
