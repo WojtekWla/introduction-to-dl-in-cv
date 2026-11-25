@@ -28,7 +28,8 @@ Check: `python dataset.py` prints `train: 466 images, 430503 crops, {'pothole': 
 
 ## Using the data (4.2 / 4.3)
 
-Put your script in this folder and import the dataset:
+Needs only torch + torchvision (no OpenCV). Put your script in this folder and
+import the dataset:
 
 ```python
 from torch.utils.data import DataLoader
@@ -48,6 +49,8 @@ Options:
 - `make_transform(train, size=224, imagenet_norm=True)`: use `imagenet_norm=False` for the from-scratch model.
 - `balanced_sampler(ds, pos_fraction=0.25)`: share of potholes per batch (only ~3% of crops are potholes).
 - `PotholeProposals(..., n_proposals=1000, pos_iou=0.5, neg_iou=0.3, add_gt_boxes=False)`.
+
+The defaults (N, thresholds, paths) are in `config.py`. Change them there, not in your script.
 - `keep_all=True`: keep every proposal (for testing; nothing may be dropped before NMS).
 
 ## Decisions
