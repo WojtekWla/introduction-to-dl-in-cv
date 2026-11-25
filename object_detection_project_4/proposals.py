@@ -1,9 +1,13 @@
 import cv2
 from pathlib import Path
 import numpy as np
+import os
 
 LOCAL_DIR = Path(__file__).resolve().parents[1] / 'data' / 'potholes'
-IMAGES_DIR = LOCAL_DIR / 'images'
+
+DEFAULT_DATA_ROOT = Path(os.environ.get("DATA_ROOT", "/dtu/datasets1/02516/potholes"))
+
+IMAGES_DIR = DEFAULT_DATA_ROOT / 'images'
 PROPOSALS_DIR = LOCAL_DIR / 'proposals'
 
 TARGET_MAX_DIM = 300

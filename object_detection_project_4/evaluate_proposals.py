@@ -2,11 +2,19 @@ import cv2
 import numpy as np
 from groundtruth import parse_boxes
 from pathlib import Path
+import os
+import json
+
 
 LOCAL_DIR = Path(__file__).resolve().parents[1] / "data" / "potholes"
-IMAGES_DIR = LOCAL_DIR / "images"
-ANNOTATIONS_DIR = LOCAL_DIR / "annotations"
+
+DEFAULT_DATA_ROOT = Path(os.environ.get("DATA_ROOT", "/dtu/datasets1/02516/potholes"))
+
+IMAGES_DIR = DEFAULT_DATA_ROOT / 'images'
 PROPOSALS_DIR = LOCAL_DIR / 'proposals'
+ANNOTATIONS_DIR = DEFAULT_DATA_ROOT / "annotations"
+
+SPLITS_FILE = Path(__file__).resolve().parent / "splits.json"
 
 IOU_THRESHOLD = 0.5
 RANGE = [10, 50, 100, 200, 300, 400, 500, 1000, 2000]
@@ -30,9 +38,11 @@ def compute_IoU(proposals, ground_truth):
 
 
 def main():
-    images_paths = sorted(IMAGES_DIR.glob("potholes*.png"))
+    splits = json.loads(SPLITS_FILE.read_text())
+    training_images = splits["train"]
+    images_paths = [IMAGES_DIR / image_name for image_name in training_images]
     if not images_paths:
-        print(f"No images found in {IMAGES_DIR}. Run download.py first.")
+        print(f"No training images listed in {SPLITS_FILE}.")
         return
 
 

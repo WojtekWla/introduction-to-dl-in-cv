@@ -1,11 +1,11 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
-
+import os
 import cv2
 
-LOCAL_DIR = Path(__file__).resolve().parents[1] / "data" / "potholes"
-IMAGES_DIR = LOCAL_DIR / "images"
-ANNOTATIONS_DIR = LOCAL_DIR / "annotations"
+DEFAULT_DATA_ROOT = Path(os.environ.get("DATA_ROOT", "/dtu/datasets1/02516/potholes"))
+IMAGES_DIR = DEFAULT_DATA_ROOT / 'images'
+ANNOTATIONS_DIR = DEFAULT_DATA_ROOT / "annotations"
 
 LEFT_KEYS = {ord("a"), 65361, 63234, 2424832}
 RIGHT_KEYS = {ord("d"), 65363, 63235, 2555904}

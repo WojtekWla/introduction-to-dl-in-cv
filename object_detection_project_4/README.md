@@ -1,9 +1,20 @@
 # Object Detection Project 4 — Potholes
 
-Dataset lives on the DTU HPC cluster at `/dtu/datasets1/02516/potholes` (SSH
-host alias `gbar`), with `images/potholesNNN.png` and
-`annotations/potholesNNN.xml` (Pascal VOC-style boxes): 665 images, 1740
-boxes, one class (`pothole`).
+Dataset lives on the DTU HPC cluster at `/dtu/datasets1/02516/potholes`, with
+`images/potholesNNN.png` and `annotations/potholesNNN.xml` (Pascal VOC-style
+boxes): 665 images, 1740 boxes, one class (`pothole`).
+
+All scripts read the dataset from that path by default. To run elsewhere (e.g.
+on a downloaded copy), set `DATA_ROOT` to the folder that contains `images/`
+and `annotations/`:
+
+```
+DATA_ROOT=../data/potholes_sample python evaluate_proposals.py
+```
+
+Outputs (proposals) go to `data/potholes/` one level above this folder (the
+repo root locally, `~/idlcv` on the HPC), never into the read-only dataset
+folder.
 
 ## Train/val/test split
 
@@ -22,19 +33,11 @@ Test: `uv run --with pytest pytest object_detection_project_4/test_make_splits.p
 
 Run in this order:
 
-### 1. `download.py`
+### 1. `groundtruth.py`
 
-Downloads a random sample of image/annotation pairs from the cluster via
-`scp` into `data/potholes/{images,annotations}` (relative to the repo root).
-
-```
-python download.py [n]      # n defaults to 10
-```
-
-### 2. `groundtruth.py`
-
-Visualizes the downloaded images: raw image on the left, same image with
-ground-truth boxes drawn on the right.
+Visualizes the images: raw image on the left, same image with ground-truth
+boxes drawn on the right. Needs a display, so run it locally on a downloaded
+copy via `DATA_ROOT`.
 
 ```
 python groundtruth.py
@@ -42,28 +45,29 @@ python groundtruth.py
 
 Navigate with `a`/`d` or the left/right arrow keys, `q`/ESC to quit.
 
-### 3. `proposals.py`
+### 2. `proposals.py`
 
-Runs Selective Search on each downloaded image and saves candidate object
-proposal boxes to `data/potholes/proposals/potholesNNN.npy` (one file per
-image, boxes as `(xmin, ymin, xmax, ymax)` in original image coordinates).
-Images are resized by their longest side before running SS for speed (never
-upscaled), and proposal boxes are rescaled back before saving.
+Runs Selective Search on every image (all splits: training, validation and
+testing all need proposals) and saves candidate boxes to
+`../data/potholes/proposals/potholesNNN.npy` (one file per image, boxes as
+`(xmin, ymin, xmax, ymax)` in original image coordinates). Images are resized
+by their longest side before running SS for speed (never upscaled), and
+proposal boxes are rescaled back before saving.
 
 ```
 python proposals.py
 ```
 
-### 4. `evaluate_proposals.py`
+### 3. `evaluate_proposals.py`
 
-Evaluates how many of the saved proposals are actually needed: computes, for
-each GT box, whether any of the first N proposals overlaps it with
-IoU >= 0.5, then reports recall averaged over all downloaded images for a
-range of N (plus "all" = every proposal an image has, uncapped).
+Evaluates how many proposals are needed: for each GT box of the **train**
+split, checks whether any of the first N proposals overlaps it with
+IoU >= 0.5, then reports recall over all train GT boxes for a range of N (plus
+"all" = every proposal an image has, uncapped). Run `proposals.py` first.
 
 ```
 python evaluate_proposals.py
 ```
 
-Run `proposals.py` before this one — it reads the `.npy` files `proposals.py`
-produces.
+`download.py` (copy a random sample via `scp`, host alias `gbar`) predates the
+`DATA_ROOT` setup and is no longer needed.
