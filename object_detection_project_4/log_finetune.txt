@@ -1,0 +1,31 @@
+device cuda
+train  431733 crops, {'pothole': 14760, 'background': 416973}
+val    62018 crops, {'pothole': 1950, 'background': 60068}
+resumed checkpoints/transfer.pt  (epoch 9, F1 0.4987)
+trainable now 8.55M  (was 0.16M frozen)
+epoch  1/15  loss 0.1479  val acc 0.9611  P 0.434  R 0.788  F1 0.5600  [73.5s]
+         saved checkpoints/finetune.pt
+epoch  2/15  loss 0.0903  val acc 0.9717  P 0.536  R 0.725  F1 0.6167  [70.9s]
+         saved checkpoints/finetune.pt
+epoch  3/15  loss 0.0673  val acc 0.9708  P 0.525  R 0.755  F1 0.6197  [73.7s]
+         saved checkpoints/finetune.pt
+epoch  4/15  loss 0.0551  val acc 0.9732  P 0.561  R 0.684  F1 0.6162  [73.5s]
+epoch  5/15  loss 0.0424  val acc 0.9723  P 0.542  R 0.771  F1 0.6367  [73.5s]
+         saved checkpoints/finetune.pt
+epoch  6/15  loss 0.0386  val acc 0.9793  P 0.676  R 0.657  F1 0.6663  [75.7s]
+         saved checkpoints/finetune.pt
+epoch  7/15  loss 0.0323  val acc 0.9786  P 0.658  R 0.668  F1 0.6629  [72.3s]
+epoch  8/15  loss 0.0290  val acc 0.9789  P 0.662  R 0.672  F1 0.6670  [70.7s]
+         saved checkpoints/finetune.pt
+epoch  9/15  loss 0.0279  val acc 0.9779  P 0.638  R 0.689  F1 0.6626  [74.4s]
+epoch 10/15  loss 0.0250  val acc 0.9782  P 0.642  R 0.698  F1 0.6688  [73.1s]
+         saved checkpoints/finetune.pt
+epoch 11/15  loss 0.0212  val acc 0.9772  P 0.634  R 0.651  F1 0.6422  [73.0s]
+epoch 12/15  loss 0.0216  val acc 0.9807  P 0.722  R 0.631  F1 0.6734  [72.6s]
+         saved checkpoints/finetune.pt
+epoch 13/15  loss 0.0188  val acc 0.9815  P 0.743  R 0.627  F1 0.6800  [73.2s]
+         saved checkpoints/finetune.pt
+epoch 14/15  loss 0.0185  val acc 0.9776  P 0.646  R 0.638  F1 0.6421  [73.7s]
+epoch 15/15  loss 0.0158  val acc 0.9787  P 0.660  R 0.664  F1 0.6617  [75.4s]
+
+best val pothole F1: 0.6800

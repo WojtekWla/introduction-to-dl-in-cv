@@ -1,0 +1,21 @@
+checkpoint checkpoints/scratch.pt  (epoch 12, F1 0.5960)
+split      val: 66 images, 64176 proposals
+input      128x128  imagenet_norm=False
+
+wrote outputs/scratch_val.npz
+scores: min 0.000  median 0.009  max 0.998
+above 0.5: 2555 of 64176 proposals
+checkpoint checkpoints/transfer.pt  (epoch 9, F1 0.4987)
+split      val: 66 images, 64176 proposals
+input      224x224  imagenet_norm=True
+
+wrote outputs/transfer_val.npz
+scores: min 0.000  median 0.002  max 1.000
+above 0.5: 3592 of 64176 proposals
+checkpoint checkpoints/transfer.pt  (epoch 9, F1 0.4987)
+split      test: 133 images, 128592 proposals
+input      224x224  imagenet_norm=True
+
+wrote outputs/transfer_test.npz
+scores: min 0.000  median 0.003  max 1.000
+above 0.5: 7256 of 128592 proposals

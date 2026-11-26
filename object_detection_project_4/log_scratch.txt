@@ -1,0 +1,42 @@
+device cuda
+train  431733 crops, {'pothole': 14760, 'background': 416973}
+val    62018 crops, {'pothole': 1950, 'background': 60068}
+epoch  1/30  loss 0.3919  val acc 0.8980  P 0.180  R 0.632  F1 0.2806  [35.8s]
+         saved checkpoints/scratch.pt
+epoch  2/30  loss 0.3095  val acc 0.9043  P 0.210  R 0.741  F1 0.3274  [36.5s]
+         saved checkpoints/scratch.pt
+epoch  3/30  loss 0.2755  val acc 0.9574  P 0.335  R 0.358  F1 0.3462  [36.0s]
+         saved checkpoints/scratch.pt
+epoch  4/30  loss 0.2614  val acc 0.9485  P 0.346  R 0.718  F1 0.4669  [35.5s]
+         saved checkpoints/scratch.pt
+epoch  5/30  loss 0.2448  val acc 0.9406  P 0.311  R 0.733  F1 0.4372  [36.1s]
+epoch  6/30  loss 0.2368  val acc 0.9681  P 0.493  R 0.490  F1 0.4916  [35.9s]
+         saved checkpoints/scratch.pt
+epoch  7/30  loss 0.2286  val acc 0.9281  P 0.267  R 0.740  F1 0.3928  [36.4s]
+epoch  8/30  loss 0.2143  val acc 0.9693  P 0.509  R 0.677  F1 0.5810  [36.2s]
+         saved checkpoints/scratch.pt
+epoch  9/30  loss 0.2039  val acc 0.9682  P 0.496  R 0.660  F1 0.5663  [35.8s]
+epoch 10/30  loss 0.2000  val acc 0.9772  P 0.733  R 0.431  F1 0.5429  [36.1s]
+epoch 11/30  loss 0.1907  val acc 0.9518  P 0.361  R 0.694  F1 0.4751  [36.3s]
+epoch 12/30  loss 0.1889  val acc 0.9744  P 0.591  R 0.601  F1 0.5960  [36.5s]
+         saved checkpoints/scratch.pt
+epoch 13/30  loss 0.1826  val acc 0.9538  P 0.375  R 0.707  F1 0.4902  [35.4s]
+epoch 14/30  loss 0.1794  val acc 0.9645  P 0.443  R 0.499  F1 0.4694  [36.3s]
+epoch 15/30  loss 0.1760  val acc 0.9676  P 0.490  R 0.715  F1 0.5816  [36.0s]
+epoch 16/30  loss 0.1719  val acc 0.9693  P 0.509  R 0.631  F1 0.5636  [35.9s]
+epoch 17/30  loss 0.1671  val acc 0.9490  P 0.361  R 0.809  F1 0.4994  [36.2s]
+epoch 18/30  loss 0.1652  val acc 0.9584  P 0.390  R 0.573  F1 0.4642  [36.6s]
+epoch 19/30  loss 0.1596  val acc 0.9562  P 0.396  R 0.747  F1 0.5177  [35.4s]
+epoch 20/30  loss 0.1550  val acc 0.9627  P 0.439  R 0.682  F1 0.5344  [35.2s]
+epoch 21/30  loss 0.1473  val acc 0.9673  P 0.486  R 0.712  F1 0.5777  [36.0s]
+epoch 22/30  loss 0.1472  val acc 0.9666  P 0.474  R 0.569  F1 0.5168  [35.8s]
+epoch 23/30  loss 0.1482  val acc 0.9398  P 0.306  R 0.722  F1 0.4298  [36.1s]
+epoch 24/30  loss 0.1417  val acc 0.9566  P 0.404  R 0.798  F1 0.5361  [35.4s]
+epoch 25/30  loss 0.1414  val acc 0.9675  P 0.489  R 0.725  F1 0.5842  [36.1s]
+epoch 26/30  loss 0.1406  val acc 0.9581  P 0.413  R 0.794  F1 0.5437  [35.8s]
+epoch 27/30  loss 0.1328  val acc 0.9667  P 0.480  R 0.710  F1 0.5726  [35.9s]
+epoch 28/30  loss 0.1296  val acc 0.9652  P 0.467  R 0.762  F1 0.5789  [36.2s]
+epoch 29/30  loss 0.1317  val acc 0.9691  P 0.506  R 0.702  F1 0.5880  [36.5s]
+epoch 30/30  loss 0.1282  val acc 0.9492  P 0.364  R 0.822  F1 0.5044  [35.8s]
+
+best val pothole F1: 0.5960

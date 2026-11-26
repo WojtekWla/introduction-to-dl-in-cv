@@ -237,3 +237,8 @@ __marimo__/
 .streamlit/secrets.toml
 /data/
 /.idea/
+
+object_detection_project_4/checkpoints/*.pt
+object_detection_project_4/outputs/
+object_detection_project_4/*.tgz
+object_detection_project_4/labels.tgz
